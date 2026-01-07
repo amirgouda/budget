@@ -1,12 +1,13 @@
 # Deploying Budget App on Portainer
 
-This guide will walk you through deploying the Budget application on Portainer using Docker Compose.
+This guide will walk you through deploying the Budget application on Portainer using Docker Compose. The application now runs as a **unified single-server** deployment (frontend + backend in one container).
 
 ## Prerequisites
 
 1. **Portainer installed and running** on your Docker host
 2. **Docker and Docker Compose** installed
 3. **Access to Portainer** web interface
+4. **PostgreSQL database** (external, not included in this stack)
 
 ## Deployment Methods
 
@@ -52,16 +53,14 @@ DB_USER=your-database-username
 DB_PASSWORD=your-database-password
 DB_NAME=your-database-name
 
-# Backend Configuration
+# Security Secrets (REQUIRED - Generate new ones!)
 SESSION_SECRET=your-random-session-secret-here
 JWT_SECRET=your-random-jwt-secret-here
-CORS_ORIGIN=*
-FRONTEND_URL=http://localhost:80
 
-# Frontend Configuration
-REACT_APP_API_URL=http://your-server-ip:8081/api
-BACKEND_PORT=8081
-FRONTEND_PORT=8080
+# Application Configuration
+APP_PORT=8080
+CORS_ORIGIN=*
+FRONTEND_URL=http://localhost:8080
 ```
 
 **Important Notes:**
@@ -71,22 +70,26 @@ FRONTEND_PORT=8080
   - `DB_USER`: Your PostgreSQL username
   - `DB_PASSWORD`: Your PostgreSQL password
   - `DB_NAME`: Your database name (create it if it doesn't exist)
-- **Security**: Change `SESSION_SECRET` and `JWT_SECRET` to random secure strings
-- **API URL**: Update `REACT_APP_API_URL` with your server's IP or domain
-- **Frontend URL**: Update `FRONTEND_URL` with your actual frontend URL
+- **Security**: Change `SESSION_SECRET` and `JWT_SECRET` to random secure strings (use `openssl rand -base64 32`)
+- **Port**: `APP_PORT` is the external port (default: 8080). The app runs on port 3001 internally.
+- **CORS**: `CORS_ORIGIN` can be `*` for development or specific domain(s) for production
 
 #### Step 5: Deploy the Stack
 
 1. Click **Deploy the stack**
-2. Wait for all services to start (this may take a few minutes on first deployment)
+2. Wait for the service to start (this may take a few minutes on first deployment as it builds both frontend and backend)
 3. Monitor the logs to ensure everything starts correctly
+
+**Note**: The unified Dockerfile uses a multi-stage build:
+- First stage: Builds the React frontend
+- Second stage: Sets up Node.js backend and copies the built frontend
 
 #### Step 6: Initialize the Database
 
 After the stack is deployed, you need to initialize the database schema:
 
 1. Go to **Containers** in Portainer
-2. Find the `budget-backend` container
+2. Find the `budget-app` container
 3. Click on it, then click **Console**
 4. Run the initialization command:
    ```bash
@@ -94,18 +97,20 @@ After the stack is deployed, you need to initialize the database schema:
    ```
 
 Alternatively, you can use Portainer's **Execute container** feature:
-1. Select `budget-backend` container
+1. Select `budget-app` container
 2. Click **Execute container**
 3. Command: `node init_db.js`
 4. Click **Execute**
 
-**Note**: Make sure your PostgreSQL database is accessible from the Docker network where the backend container is running. If your PostgreSQL is on a different network, you may need to configure network access or use the host's IP address.
+**Note**: Make sure your PostgreSQL database is accessible from the Docker network where the container is running. If your PostgreSQL is on a different network, you may need to configure network access or use the host's IP address.
 
 #### Step 7: Access Your Application
 
-- **Frontend**: `http://your-server-ip:8080` (or the port you configured)
-- **Backend API**: `http://your-server-ip:8081`
-- **Health Check**: `http://your-server-ip:8081/health`
+- **Application**: `http://your-server-ip:8080` (or the port you configured in `APP_PORT`)
+- **Health Check**: `http://your-server-ip:8080/health`
+- **API Endpoints**: `http://your-server-ip:8080/api/*`
+
+The frontend and backend are now served from the same server, so there are no CORS issues and no need to configure separate API URLs.
 
 ### Method 2: Using Portainer Compose Editor
 
@@ -124,7 +129,7 @@ If you prefer to manually edit the compose file:
 
 You'll need to create an admin user. You can do this by:
 
-1. Access the backend container console
+1. Access the container console
 2. Create a script or use SQL directly to insert an admin user
 
 Or use the API after deployment (you may need to temporarily allow registration).
@@ -134,10 +139,8 @@ Or use the API after deployment (you may need to temporarily allow registration)
 If you want to use a domain name instead of IP addresses:
 
 1. Set up a reverse proxy (Nginx, Traefik, etc.)
-2. Point it to:
-   - Frontend: `http://budget-frontend:80` (internal container port)
-   - Backend: `http://budget-backend:3001` (internal container port)
-3. Update `REACT_APP_API_URL` and `FRONTEND_URL` environment variables
+2. Point it to: `http://budget-app:3001` (internal container port)
+3. Update `FRONTEND_URL` environment variable to match your domain
 
 ### 3. Set Up SSL/HTTPS (Optional)
 
@@ -150,7 +153,7 @@ If you want to use a domain name instead of IP addresses:
 ### View Logs
 
 1. Go to **Containers** in Portainer
-2. Click on any container (`budget-backend`, `budget-frontend`, or `budget-postgres`)
+2. Click on `budget-app` container
 3. Click **Logs** to view real-time logs
 
 ### Restart Services
@@ -162,30 +165,36 @@ If you want to use a domain name instead of IP addresses:
 
 ### Backup Database
 
-1. Go to **Containers**
-2. Select `budget-postgres`
-3. Use **Execute container** to run:
-   ```bash
-   pg_dump -U appuser budget_app > /backup/backup.sql
-   ```
+Since the database is external, backup your PostgreSQL database using standard PostgreSQL backup methods:
 
-Or create a scheduled backup job in Portainer.
+```bash
+pg_dump -U appuser budget_app > backup.sql
+```
+
+Or create a scheduled backup job in your PostgreSQL server.
 
 ## Troubleshooting
 
-### Backend won't start
+### Build fails with "frontend not found"
 
-1. Check backend logs: `Containers` → `budget-backend` → `Logs`
+- Ensure you're using the latest code from the repository
+- Check that `.dockerignore` doesn't exclude the `frontend` directory
+- Verify the repository branch is correct
+
+### App won't start
+
+1. Check container logs: `Containers` → `budget-app` → `Logs`
 2. Verify database connection:
    - Ensure PostgreSQL is accessible
    - Check database credentials in environment variables
-3. Check if the configured backend port (default: 8081) is available
+3. Check if the configured port (default: 8080) is available
 
-### Frontend shows connection errors
+### Frontend shows errors
 
-1. Verify `REACT_APP_API_URL` environment variable is correct
-2. Check backend is running and accessible
-3. Check CORS settings in backend configuration
+1. Check container logs for build errors
+2. Verify the React build completed successfully
+3. Check browser console for JavaScript errors
+4. Ensure the container is running and healthy
 
 ### Database connection issues
 
@@ -195,24 +204,22 @@ Or create a scheduled backup job in Portainer.
    - If PostgreSQL is on the same host: use host IP or `host.docker.internal` (Docker Desktop)
    - If PostgreSQL is on another server: use the server's IP address
    - If PostgreSQL is in another Docker network: configure network access
-4. Test connection from backend container console:
+4. Test connection from container console:
    ```bash
    node -e "const db = require('./db'); db.query('SELECT NOW()').then(r => console.log(r)).catch(e => console.error(e))"
    ```
 
 ### Port conflicts
 
-1. Default ports are 8081 (backend) and 8080 (frontend) to avoid common conflicts
-2. If these are in use, change via environment variables:
+1. Default port is 8080 to avoid common conflicts
+2. If this is in use, change via environment variable:
    ```env
-   BACKEND_PORT=8082
-   FRONTEND_PORT=8081
+   APP_PORT=8081
    ```
-3. Or modify port mappings in `docker-compose.yml`:
+3. Or modify port mapping in `docker-compose.yml`:
    ```yaml
    ports:
-     - "${BACKEND_PORT:-8082}:3001"  # Change backend port
-     - "${FRONTEND_PORT:-8081}:80"   # Change frontend port
+     - "${APP_PORT:-8081}:3001"  # Change external port
    ```
 
 ## Updating the Application
@@ -243,17 +250,17 @@ If you used the Git repository method:
 | `DB_NAME` | **Yes** | Database name |
 | `SESSION_SECRET` | **Yes** | Session encryption secret (change from default) |
 | `JWT_SECRET` | **Yes** | JWT token secret (change from default) |
+| `APP_PORT` | No | External port (default: `8080`) |
 | `CORS_ORIGIN` | No | Allowed CORS origins (default: `*`) |
 | `FRONTEND_URL` | No | Frontend URL for CORS (default: `http://localhost:8080`) |
-| `REACT_APP_API_URL` | **Yes** | API endpoint for frontend (default: `http://localhost:8081/api`) |
-| `BACKEND_PORT` | No | Backend external port (default: `8081`) |
-| `FRONTEND_PORT` | No | Frontend external port (default: `8080`) |
+| `NODE_ENV` | No | Node environment (default: `production`) |
+| `PORT` | No | Internal port (default: `3001`, don't change) |
 
 ## Security Best Practices
 
 1. **Change all default secrets** before production deployment
 2. **Use strong passwords** for database
-3. **Restrict CORS_ORIGIN** to your actual domain(s)
+3. **Restrict CORS_ORIGIN** to your actual domain(s) in production
 4. **Set up firewall rules** to limit access
 5. **Enable SSL/HTTPS** for production
 6. **Regular backups** of the database
@@ -264,5 +271,5 @@ If you used the Git repository method:
 For issues or questions:
 - Check container logs in Portainer
 - Verify all environment variables are set correctly
-- Ensure all services are healthy (check health status in Portainer)
-
+- Ensure the service is healthy (check health status in Portainer)
+- Review the troubleshooting section above

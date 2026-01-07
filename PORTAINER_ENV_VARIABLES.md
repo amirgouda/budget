@@ -43,30 +43,20 @@ SESSION_SECRET=K8mN2pQ5rT9vW1xY4zA7bC0dE3fG6hI9jK2lM5nO8pQ1rS4tU7vW0xY3zA6b
 JWT_SECRET=M9nP2qR5sT8uV1wX4yZ7aB0cD3eF6gH9iJ2kL5mN8oP1qR4sT7uV0wX3yZ6a
 ```
 
-### Frontend Configuration (Required)
-
-```env
-REACT_APP_API_URL=http://YOUR_SERVER_IP:8081/api
-```
-
-**Replace `YOUR_SERVER_IP` with:**
-- Your server's IP address (e.g., `http://192.168.1.100:8081/api`)
-- Or your domain name (e.g., `http://budget.yourdomain.com:8081/api`)
-
-**Important**: If you change `BACKEND_PORT` (below), also update this URL to match the new port!
-
 ### Optional Environment Variables
 
 ```env
-BACKEND_PORT=8081
+APP_PORT=8080
 CORS_ORIGIN=*
 FRONTEND_URL=http://localhost:8080
-FRONTEND_PORT=8080
 NODE_ENV=production
 PORT=3001
 ```
 
-**Note**: Default ports are now 8081 (backend) and 8080 (frontend) to avoid conflicts. Change if needed.
+**Note**: 
+- `APP_PORT` is the external port (default: 8080) - change if needed
+- `PORT` is the internal port (3001) - don't change this
+- `CORS_ORIGIN` can be `*` for development or specific domain(s) for production
 
 ## Complete Example for Portainer
 
@@ -84,16 +74,13 @@ DB_NAME=budget_app
 SESSION_SECRET=<generate-new-secret-here>
 JWT_SECRET=<generate-new-secret-here>
 
-# Port Configuration (defaults: 8081 for backend, 8080 for frontend)
-BACKEND_PORT=8081
-FRONTEND_PORT=8080
-
-# Frontend API URL (UPDATE WITH YOUR SERVER IP and PORT)
-REACT_APP_API_URL=http://<YOUR_SERVER_IP>:8081/api
+# Port Configuration (default: 8080 external, 3001 internal)
+APP_PORT=8080
 
 # Optional
 CORS_ORIGIN=*
 FRONTEND_URL=http://localhost:8080
+NODE_ENV=production
 ```
 
 ## Quick Setup Steps in Portainer
@@ -126,16 +113,16 @@ FRONTEND_URL=http://localhost:8080
    - Always generate new `SESSION_SECRET` and `JWT_SECRET` for production
    - Consider using Portainer's secret management for sensitive values
 
-4. **API URL**:
-   - Must be accessible from the browser
-   - If using a domain, ensure DNS is configured
-   - If using IP, ensure firewall allows access
+4. **Unified Deployment**:
+   - Frontend and backend are now in a single container
+   - No need to configure `REACT_APP_API_URL` - API calls use relative paths (`/api`)
+   - Single port to expose (default: 8080)
 
 ## Testing Database Connection
 
 After deployment, test the connection:
 
-1. Go to **Containers** → `budget-backend`
+1. Go to **Containers** → `budget-app`
 2. Click **Console**
 3. Run: `node -e "const db = require('./db'); db.query('SELECT NOW()').then(r => console.log('Connected!', r.rows[0])).catch(e => console.error('Error:', e.message))"`
 
@@ -147,8 +134,12 @@ After deployment, test the connection:
 - Verify credentials are correct
 - Check firewall/network rules
 
-**Frontend can't reach API?**
-- Verify `REACT_APP_API_URL` matches your server IP and port (default: 8081)
-- Check backend container is running on the configured port
-- Verify CORS settings allow your frontend origin
+**App won't start?**
+- Check container logs: Containers → budget-app → Logs
+- Verify all required environment variables are set
+- Ensure the port (default: 8080) is not already in use
 
+**Can't access the application?**
+- Verify `APP_PORT` matches the port you're accessing
+- Check firewall allows access to the port
+- Ensure the container is running and healthy
