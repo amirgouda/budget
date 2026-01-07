@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Method Breakdown - UI Mockup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .mockup-container {
+            max-width: 100%;
+            margin: 0;
+            width: 100%;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .section-title {
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        /* Budget Overview Section (existing) */
+        .budget-overview {
+            background: #f9fafb;
+            border-radius: 0;
+            padding: 1.5rem;
+            margin-bottom: 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .budget-cards {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .budget-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            border: 2px solid #e5e7eb;
+        }
+
+        .budget-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Total Spending Section */
+        .total-spending {
+            text-align: center;
+            padding: 1rem;
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            font-size: 1.1rem;
+            color: #1f2937;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s, transform 0.1s;
+            position: relative;
+        }
+
+        .total-spending:hover {
+            background-color: #f3f4f6;
+        }
+
+        .total-spending:active {
+            transform: scale(0.98);
+        }
+
+        .total-spending-toggle {
+            display: inline-block;
+            margin-left: 0.5rem;
+            transition: transform 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .total-spending.collapsed .total-spending-toggle {
+            transform: rotate(-90deg);
+        }
+
+        /* NEW: Payment Method Breakdown Section */
+        .payment-method-breakdown {
+            margin-top: 1rem;
+            transition: opacity 0.3s, max-height 0.3s, margin 0.3s;
+            overflow: hidden;
+        }
+
+        .payment-method-breakdown.hidden {
+            opacity: 0;
+            max-height: 0;
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
+        .payment-method-breakdown-title {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-bottom: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* Mobile: Horizontal Scrollable Cards */
+        .payment-method-breakdown-cards {
+            display: flex;
+            gap: 0.75rem;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 0.5rem 0;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+        }
+
+        .payment-method-breakdown-cards::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .payment-method-breakdown-cards::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .payment-method-breakdown-cards::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .payment-method-breakdown-card {
+            flex: 0 0 auto;
+            width: 120px;
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            min-height: 120px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .payment-method-breakdown-card:active {
+            transform: scale(0.98);
+        }
+
+        .payment-method-breakdown-icon {
+            font-size: 2rem;
+            line-height: 1;
+        }
+
+        .payment-method-breakdown-name {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .payment-method-breakdown-amount {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #6366f1;
+            text-align: center;
+        }
+
+        /* Tablet/Desktop: Grid Layout */
+        @media (min-width: 640px) {
+            .budget-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .payment-method-breakdown-cards {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                overflow: visible;
+                gap: 1rem;
+            }
+
+            .payment-method-breakdown-card {
+                width: 100%;
+                min-height: 140px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .budget-cards {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .payment-method-breakdown-cards {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .budget-cards {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .payment-method-breakdown-cards {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        /* Demo indicators */
+        .demo-label {
+            display: none;
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: #6366f1;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .mockup-wrapper {
+            position: relative;
+            background: white;
+            border-radius: 0;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+    <div class="mockup-container">
+        <h1 class="section-title" style="display: none;">📱 Mobile View (375px width)</h1>
+        <div class="mockup-wrapper" style="max-width: 100%; margin: 0;">
+            <div class="demo-label">MOBILE</div>
+            
+            <!-- Budget Overview Section -->
+            <div class="budget-overview">
+                <div class="budget-cards">
+                    <div class="budget-card">
+                        <h3>Groceries</h3>
+                        <p>Budget: 2000.00 EGP</p>
+                        <p>Spent: 1500.00 EGP</p>
+                    </div>
+                    <div class="budget-card">
+                        <h3>Transportation</h3>
+                        <p>Budget: 1000.00 EGP</p>
+                        <p>Spent: 800.00 EGP</p>
+                    </div>
+                </div>
+
+                <!-- Total Spending -->
+                <div class="total-spending" onclick="togglePaymentBreakdown(this)">
+                    <strong>Total Spent This Month: 2300.00 EGP</strong>
+                    <span class="total-spending-toggle">▼</span>
+                </div>
+
+                <!-- NEW: Payment Method Breakdown -->
+                <div class="payment-method-breakdown">
+                    <div class="payment-method-breakdown-title">Spending by Payment Method</div>
+                    <div class="payment-method-breakdown-cards">
+                        <div class="payment-method-breakdown-card">
+                            <div class="payment-method-breakdown-icon">💵</div>
+                            <div class="payment-method-breakdown-name">Cash</div>
+                            <div class="payment-method-breakdown-amount">800.00 EGP</div>
+                        </div>
+                        <div class="payment-method-breakdown-card">
+                            <div class="payment-method-breakdown-icon">💳</div>
+                            <div class="payment-method-breakdown-name">Credit Card</div>
+                            <div class="payment-method-breakdown-amount">1200.00 EGP</div>
+                        </div>
+                        <div class="payment-method-breakdown-card">
+                            <div class="payment-method-breakdown-icon">📱</div>
+                            <div class="payment-method-breakdown-name">Mobile Wallet</div>
+                            <div class="payment-method-breakdown-amount">300.00 EGP</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h1 class="section-title" style="display: none; margin-top: 0;">💻 Desktop View (1024px width)</h1>
+        <div class="mockup-wrapper" style="max-width: 100%; margin: 0; display: none;">
+            <div class="demo-label">DESKTOP</div>
+            
+            <!-- Budget Overview Section -->
+            <div class="budget-overview">
+                <div class="budget-cards">
+                    <div class="budget-card">
+                        <h3>Groceries</h3>
+                        <p>Budget: 2000.00 EGP</p>
+                        <p>Spent: 1500.00 EGP</p>
+                    </div>
+                    <div class="budget-card">
+                        <h3>Transportation</h3>
+                        <p>Budget: 1000.00 EGP</p>
+                        <p>Spent: 800.00 EGP</p>
+                    </div>
+                    <div class="budget-card">
+                        <h3>Entertainment</h3>
+                        <p>Budget: 500.00 EGP</p>
+                        <p>Spent: 200.00 EGP</p>
+                    </div>
+                    <div class="budget-card">
+                        <h3>Utilities</h3>
+                        <p>Budget: 800.00 EGP</p>
+                        <p>Spent: 600.00 EGP</p>
+                    </div>
+                </div>
+
+                <!-- Total Spending -->
+                <div class="total-spending" onclick="togglePaymentBreakdown(this)">
+                    <strong>Total Spent This Month: 3100.00 EGP</strong>
+                    <span class="total-spending-toggle">▼</span>
+                </div>
+
+                <!-- NEW: Payment Method Breakdown -->
+                <div class="payment-method-breakdown">
+                    <div class="payment-method-breakdown-title">Spending by Payment Method</div>
+                    <div class="payment-method-breakdown-cards">
+                        <div class="payment-method-breakdown-card">
+                            <div class="payment-method-breakdown-icon">💵</div>
+                            <div class="payment-method-breakdown-name">Cash</div>
+                            <div class="payment-method-breakdown-amount">1000.00 EGP</div>
+                        </div>
+                        <div class="payment-method-breakdown-card">
+                            <div class="payment-method-breakdown-icon">💳</div>
+                            <div class="payment-method-breakdown-name">Credit Card</div>
+                            <div class="payment-method-breakdown-amount">1500.00 EGP</div>
+                        </div>
+                        <div class="payment-method-breakdown-card">
+                            <div class="payment-method-breakdown-icon">📱</div>
+                            <div class="payment-method-breakdown-name">Mobile Wallet</div>
+                            <div class="payment-method-breakdown-amount">400.00 EGP</div>
+                        </div>
+                        <div class="payment-method-breakdown-card">
+                            <div class="payment-method-breakdown-icon">🏦</div>
+                            <div class="payment-method-breakdown-name">Bank Transfer</div>
+                            <div class="payment-method-breakdown-amount">200.00 EGP</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="display: none; text-align: center; color: white; margin-top: 2rem; padding: 1rem;">
+        <p><strong>Key Features:</strong></p>
+        <ul style="list-style: none; margin-top: 0.5rem;">
+            <li>📱 Mobile: Horizontal scrollable cards (swipe left/right)</li>
+            <li>💻 Desktop: Grid layout (2-4 columns based on screen size)</li>
+            <li>🎨 Consistent design with existing budget cards</li>
+            <li>👆 Touch-friendly (min 44px touch targets)</li>
+            <li>✨ Only shows payment methods with spending this month</li>
+        </ul>
+    </div>
+
+    <script>
+        function togglePaymentBreakdown(element) {
+            // Find the payment method breakdown section that follows this total-spending element
+            const breakdown = element.nextElementSibling;
+            if (breakdown && breakdown.classList.contains('payment-method-breakdown')) {
+                // Toggle the hidden class
+                breakdown.classList.toggle('hidden');
+                // Toggle the collapsed class on the total-spending element
+                element.classList.toggle('collapsed');
+            }
+        }
+    </script>
+</body>
+</html>
