@@ -4,10 +4,9 @@
 
 import axios from 'axios';
 
-// Get API URL from window global (set by index.html script) or build-time env var
-const API_BASE_URL = (typeof window !== 'undefined' && window.REACT_APP_API_URL) || 
-                     process.env.REACT_APP_API_URL || 
-                     'http://192.168.0.100:8081/api';
+// Use relative path since frontend and backend are now on the same server
+// This works for both development (proxy) and production (same origin)
+const API_BASE_URL = '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

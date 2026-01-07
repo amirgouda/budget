@@ -6,6 +6,7 @@
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const path = require('path');
 const config = require('./config');
 const auth = require('./auth');
 const authHandlers = require('./handlers/auth');
@@ -60,16 +61,36 @@ app.delete('/api/members/:id', auth.getAuthMiddleware(), auth.requireAdmin, memb
 app.get('/api/subcategories', auth.getAuthMiddleware(), subcategoryHandlers.getSubcategoriesHandler);
 app.post('/api/subcategories', auth.getAuthMiddleware(), subcategoryHandlers.createSubcategoryHandler);
 
-// Error handling middleware
+// Error handling middleware (must be before catch-all route)
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
+// Serve static files from React build directory (in production)
+if (config.server.env === 'production') {
+  const buildPath = path.join(__dirname, 'frontend', 'build');
+  app.use(express.static(buildPath));
+  
+  // Serve React app for all non-API routes (SPA routing)
+  // This must be the last route handler
+  app.get('*', (req, res) => {
+    // Don't serve index.html for API routes
+    if (req.path.startsWith('/api')) {
+      return res.status(404).json({ error: 'Route not found' });
+    }
+    res.sendFile(path.join(buildPath, 'index.html'));
+  });
+} else {
+  // In development, just return 404 for non-API routes
+  app.use((req, res) => {
+    if (req.path.startsWith('/api')) {
+      res.status(404).json({ error: 'Route not found' });
+    } else {
+      res.status(404).send('Frontend not available in development mode. Please run the frontend separately.');
+    }
+  });
+}
 
 // Start server (only if not in Vercel)
 if (!config.server.isVercel) {

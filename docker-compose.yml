@@ -1,12 +1,12 @@
 version: '3.8'
 
 services:
-  # Backend API
-  backend:
+  # Unified Frontend + Backend Server
+  app:
     build: .
-    container_name: budget-backend
+    container_name: budget-app
     ports:
-      - "${BACKEND_PORT:-8081}:3001"
+      - "${APP_PORT:-8080}:3001"
     environment:
       - NODE_ENV=production
       - PORT=3001
@@ -27,20 +27,3 @@ services:
       timeout: 3s
       retries: 3
       start_period: 5s
-
-  # Frontend React App
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - REACT_APP_API_URL=${REACT_APP_API_URL:-http://192.168.0.100:8081/api}
-    container_name: budget-frontend
-    ports:
-      - "${FRONTEND_PORT:-8080}:80"
-    environment:
-      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://192.168.0.100:8081/api}
-    depends_on:
-      - backend
-    restart: unless-stopped
-
