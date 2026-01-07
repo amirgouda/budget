@@ -34,10 +34,12 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:8081/api}
+        - REACT_APP_API_URL=${REACT_APP_API_URL:-http://192.168.0.100:8081/api}
     container_name: budget-frontend
     ports:
       - "${FRONTEND_PORT:-8080}:80"
+    environment:
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://192.168.0.100:8081/api}
     depends_on:
       - backend
     restart: unless-stopped

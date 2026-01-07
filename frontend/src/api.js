@@ -4,7 +4,9 @@
 
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8081/api';
+// API URL will be replaced at runtime by docker-entrypoint.sh
+// This is a placeholder that will be replaced
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://192.168.0.100:8081/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
