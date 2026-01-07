@@ -1,0 +1,84 @@
+/**
+ * Express server for Portainer/Docker deployment
+ * Main application entry point
+ */
+
+const express = require('express');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const config = require('./config');
+const auth = require('./auth');
+const authHandlers = require('./handlers/auth');
+const spendingHandlers = require('./handlers/spendings');
+const categoryHandlers = require('./handlers/categories');
+const memberHandlers = require('./handlers/members');
+const subcategoryHandlers = require('./handlers/subcategories');
+
+const app = express();
+
+// Middleware
+app.use(cors({
+  origin: config.cors.origin === '*' ? true : config.cors.origin,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+app.use(express.json());
+app.use(cookieParser());
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Public routes
+app.post('/api/auth/login', authHandlers.loginHandler);
+app.post('/api/auth/logout', authHandlers.logoutHandler);
+
+// Protected routes - require authentication
+app.get('/api/auth/me', auth.getAuthMiddleware(), authHandlers.getCurrentUserHandler);
+
+// Spending routes
+app.get('/api/spendings', auth.getAuthMiddleware(), spendingHandlers.getSpendingsHandler);
+app.post('/api/spendings', auth.getAuthMiddleware(), spendingHandlers.addSpendingHandler);
+app.delete('/api/spendings/:id', auth.getAuthMiddleware(), spendingHandlers.deleteSpendingHandler);
+app.get('/api/spendings/stats', auth.getAuthMiddleware(), spendingHandlers.getSpendingStatsHandler);
+
+// Category routes (admin only)
+app.get('/api/categories', auth.getAuthMiddleware(), categoryHandlers.getCategoriesHandler);
+app.post('/api/categories', auth.getAuthMiddleware(), auth.requireAdmin, categoryHandlers.createCategoryHandler);
+app.put('/api/categories/:id', auth.getAuthMiddleware(), auth.requireAdmin, categoryHandlers.updateCategoryHandler);
+app.delete('/api/categories/:id', auth.getAuthMiddleware(), auth.requireAdmin, categoryHandlers.deleteCategoryHandler);
+
+// Member routes (admin only)
+app.get('/api/members', auth.getAuthMiddleware(), auth.requireAdmin, memberHandlers.getMembersHandler);
+app.post('/api/members', auth.getAuthMiddleware(), auth.requireAdmin, memberHandlers.createMemberHandler);
+app.put('/api/members/:id', auth.getAuthMiddleware(), auth.requireAdmin, memberHandlers.updateMemberHandler);
+app.delete('/api/members/:id', auth.getAuthMiddleware(), auth.requireAdmin, memberHandlers.deleteMemberHandler);
+
+// Subcategory routes
+app.get('/api/subcategories', auth.getAuthMiddleware(), subcategoryHandlers.getSubcategoriesHandler);
+app.post('/api/subcategories', auth.getAuthMiddleware(), subcategoryHandlers.createSubcategoryHandler);
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// Start server (only if not in Vercel)
+if (!config.server.isVercel) {
+  const PORT = config.server.port;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Environment: ${config.server.env}`);
+  });
+}
+
+module.exports = app;
+
