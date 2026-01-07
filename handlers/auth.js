@@ -61,7 +61,15 @@ async function loginHandler(req, res) {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
+    console.error('Error stack:', error.stack);
+    // Return more detailed error in development, generic in production
+    const errorMessage = config.server.env === 'development' 
+      ? error.message 
+      : 'Login failed';
+    res.status(500).json({ 
+      error: errorMessage,
+      details: config.server.env === 'development' ? error.stack : undefined
+    });
   }
 }
 

@@ -5,14 +5,17 @@
  */
 
 const { Client } = require('pg');
+require('dotenv').config();
 
 const dbConfig = {
-  host: 'am.lan',
-  user: 'appuser',
-  password: 'P0stGress',
-  port: 5432,
+  host: process.env.DB_HOST || 'am.lan',
+  user: process.env.DB_USER || 'appuser',
+  password: process.env.DB_PASSWORD || 'P0stGress',
+  port: parseInt(process.env.DB_PORT || '5432'),
   database: 'postgres' // Connect to default database first
 };
+
+const targetDatabase = process.env.DB_NAME || 'budget_app';
 
 async function initDatabase() {
   const client = new Client(dbConfig);
@@ -22,32 +25,32 @@ async function initDatabase() {
     await client.connect();
     console.log('✓ Connected successfully\n');
 
-    // Check if budget_app database exists
+    // Check if target database exists
     const dbCheck = await client.query(
-      "SELECT 1 FROM pg_database WHERE datname = 'budget_app'"
+      `SELECT 1 FROM pg_database WHERE datname = '${targetDatabase}'`
     );
 
     if (dbCheck.rows.length === 0) {
-      console.log('Creating budget_app database...');
-      // Terminate existing connections to budget_app if any
+      console.log(`Creating ${targetDatabase} database...`);
+      // Terminate existing connections to target database if any
       await client.query(`
         SELECT pg_terminate_backend(pid)
         FROM pg_stat_activity
-        WHERE datname = 'budget_app' AND pid <> pg_backend_pid()
+        WHERE datname = '${targetDatabase}' AND pid <> pg_backend_pid()
       `);
-      await client.query('CREATE DATABASE budget_app');
-      console.log('✓ Database budget_app created\n');
+      await client.query(`CREATE DATABASE ${targetDatabase}`);
+      console.log(`✓ Database ${targetDatabase} created\n`);
     } else {
-      console.log('✓ Database budget_app already exists\n');
+      console.log(`✓ Database ${targetDatabase} already exists\n`);
     }
 
     await client.end();
 
-    // Connect to budget_app database
-    const appDbConfig = { ...dbConfig, database: 'budget_app' };
+    // Connect to target database
+    const appDbConfig = { ...dbConfig, database: targetDatabase };
     const appClient = new Client(appDbConfig);
     await appClient.connect();
-    console.log('Connected to budget_app database\n');
+    console.log(`Connected to ${targetDatabase} database\n`);
 
     // Create tables
     console.log('Creating tables...\n');
