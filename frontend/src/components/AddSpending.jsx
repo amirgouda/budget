@@ -3,8 +3,8 @@ import api from '../api';
 import CategorySelector from './CategorySelector';
 import SubcategorySelector from './SubcategorySelector';
 
-function AddSpending({ categories, onAdd, onClose }) {
-  const [categoryId, setCategoryId] = useState('');
+function AddSpending({ categories, onAdd, onClose, initialCategoryId }) {
+  const [categoryId, setCategoryId] = useState(initialCategoryId || '');
   const [subcategoryId, setSubcategoryId] = useState(null);
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -15,11 +15,13 @@ function AddSpending({ categories, onAdd, onClose }) {
   const quickAmounts = [50, 100, 200, 500, 1000];
 
   useEffect(() => {
-    // Auto-select first category if available
-    if (categories && categories.length > 0 && !categoryId) {
+    // Set initial category if provided, otherwise auto-select first category if available
+    if (initialCategoryId) {
+      setCategoryId(initialCategoryId);
+    } else if (categories && categories.length > 0 && !categoryId) {
       setCategoryId(categories[0].id);
     }
-  }, [categories, categoryId]);
+  }, [categories, categoryId, initialCategoryId]);
 
   useEffect(() => {
     // Reset subcategory when category changes

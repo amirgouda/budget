@@ -18,6 +18,7 @@ function Dashboard({ user, onLogout }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAddSpending, setShowAddSpending] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -155,6 +156,11 @@ function Dashboard({ user, onLogout }) {
                   <div
                     key={cat.id}
                     className={`budget-card ${remaining < 0 ? 'over-budget' : ''}`}
+                    onClick={() => {
+                      setSelectedCategoryId(cat.id);
+                      setShowAddSpending(true);
+                    }}
+                    style={{ cursor: 'pointer' }}
                   >
                     <div className="budget-card-header">
                       <h3>{cat.name}</h3>
@@ -200,7 +206,10 @@ function Dashboard({ user, onLogout }) {
             <h2>Recent Spendings</h2>
             <button
               className="btn btn-primary btn-large"
-              onClick={() => setShowAddSpending(true)}
+              onClick={() => {
+                setSelectedCategoryId(null);
+                setShowAddSpending(true);
+              }}
             >
               + Add Spending
             </button>
@@ -247,7 +256,11 @@ function Dashboard({ user, onLogout }) {
         <AddSpending
           categories={categories}
           onAdd={handleAddSpending}
-          onClose={() => setShowAddSpending(false)}
+          onClose={() => {
+            setShowAddSpending(false);
+            setSelectedCategoryId(null);
+          }}
+          initialCategoryId={selectedCategoryId}
         />
       )}
     </div>

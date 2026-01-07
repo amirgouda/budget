@@ -297,9 +297,24 @@ body {
   transition: all 0.2s;
 }
 
+.budget-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
+}
+
+.budget-card:active {
+  transform: translateY(0);
+}
+
 .budget-card.over-budget {
   border-color: var(--danger-color);
   background: #fef2f2;
+}
+
+.budget-card.over-budget:hover {
+  border-color: var(--danger-color);
+  box-shadow: var(--shadow-md);
 }
 
 .budget-card-header {
