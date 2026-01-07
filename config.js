@@ -1,58 +1,55 @@
 /**
  * Configuration file for database and application settings
- * Supports both Portainer (Docker) and Vercel deployments
+ * Hardcoded for Docker deployment
  */
 
-require('dotenv').config();
-
 const config = {
-  // Database configuration
+  // Database configuration - hardcoded
   database: {
-    host: process.env.DB_HOST || 'am.lan',
-    port: parseInt(process.env.DB_PORT || '5432'),
-    user: process.env.DB_USER || 'appuser',
-    password: process.env.DB_PASSWORD || 'P0stGress',
-    database: process.env.DB_NAME || 'budget_app',
-    // Connection pool settings for Portainer
-    max: parseInt(process.env.DB_POOL_MAX || '10'),
-    idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '30000'),
-    connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT || '2000'),
+    host: 'am.lan',
+    port: 5432,
+    user: 'appuser',
+    password: 'P0stGress',
+    database: 'budget_app',
+    // Connection pool settings
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
   },
 
   // Server configuration
   server: {
-    port: parseInt(process.env.PORT || '3001'),
-    env: process.env.NODE_ENV || 'development',
+    port: 3001,
+    env: 'production',
     // For Vercel, we don't need a port
-    isVercel: process.env.VERCEL === '1',
+    isVercel: false,
   },
 
   // Session configuration
   session: {
-    secret: process.env.SESSION_SECRET || 'change-this-secret-key-in-production',
-    maxAge: parseInt(process.env.SESSION_MAX_AGE || '86400000'), // 24 hours in milliseconds
+    secret: 'budget-app-session-secret-key-change-in-production',
+    maxAge: 86400000, // 24 hours in milliseconds
     cookieName: 'budget_session',
   },
 
-  // JWT configuration (for Vercel serverless)
+  // JWT configuration
   jwt: {
-    secret: process.env.JWT_SECRET || 'change-this-jwt-secret-in-production',
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    secret: 'budget-app-jwt-secret-key-change-in-production',
+    expiresIn: '7d',
   },
 
   // CORS configuration
   cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: '*',
     credentials: true,
   },
 
   // Frontend URL (for CORS and redirects)
-  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
+  frontendUrl: 'http://localhost:3030',
 };
 
 // Generate database connection string
-config.database.connectionString = process.env.DATABASE_URL || 
+config.database.connectionString = 
   `postgresql://${config.database.user}:${config.database.password}@${config.database.host}:${config.database.port}/${config.database.database}`;
 
 module.exports = config;
-
