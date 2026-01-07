@@ -74,11 +74,13 @@ if (config.server.env === 'production') {
   
   // Serve React app for all non-API routes (SPA routing)
   // This must be the last route handler
-  app.get('*', (req, res) => {
+  // Express 5 doesn't support '*' wildcard, so we use app.use with a function
+  app.use((req, res, next) => {
     // Don't serve index.html for API routes
     if (req.path.startsWith('/api')) {
       return res.status(404).json({ error: 'Route not found' });
     }
+    // Serve index.html for all other routes (SPA routing)
     res.sendFile(path.join(buildPath, 'index.html'));
   });
 } else {
