@@ -230,9 +230,7 @@ function Dashboard({ user, onLogout }) {
                         <p className="spending-subcategory">{spending.subcategory_name}</p>
                       )}
                       <span className="spending-date">{formatDate(spending.date)}</span>
-                      {user.role === 'admin' && (
-                        <span className="spending-user">by {spending.user_name}</span>
-                      )}
+                      <span className="spending-user">by {spending.user_name}</span>
                     </div>
                     <div className="spending-amount">
                       {formatCurrency(spending.amount)}

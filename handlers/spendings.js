@@ -7,7 +7,7 @@ const db = require('../db');
 
 /**
  * Get spendings handler
- * Supports filtering by user, category, and date range
+ * Returns all spendings (shared budget). Supports optional filtering by userId, category, and date range
  */
 async function getSpendingsHandler(req, res) {
   try {
@@ -36,12 +36,8 @@ async function getSpendingsHandler(req, res) {
     const params = [];
     let paramCount = 1;
 
-    // If not admin, only show own spendings
-    if (currentUser.role !== 'admin') {
-      query += ` AND s.user_id = $${paramCount}`;
-      params.push(currentUser.id);
-      paramCount++;
-    } else if (userId) {
+    // Optional filter by userId (for admin filtering if needed)
+    if (userId) {
       query += ` AND s.user_id = $${paramCount}`;
       params.push(userId);
       paramCount++;
@@ -185,11 +181,11 @@ async function deleteSpendingHandler(req, res) {
 
 /**
  * Get spending statistics handler
+ * Returns aggregated statistics across all users (shared budget)
  */
 async function getSpendingStatsHandler(req, res) {
   try {
     const { startDate, endDate } = req.query;
-    const currentUser = req.user;
 
     let dateFilter = '';
     const params = [];
@@ -209,14 +205,7 @@ async function getSpendingStatsHandler(req, res) {
       paramCount += 2;
     }
 
-    // If not admin, only show own stats
-    if (currentUser.role !== 'admin') {
-      dateFilter += ` AND s.user_id = $${paramCount}`;
-      params.push(currentUser.id);
-      paramCount++;
-    }
-
-    // Get total spending by category
+    // Get total spending by category (aggregated across all users)
     let categoryStatsQuery = `
       SELECT 
         c.id,
@@ -230,12 +219,6 @@ async function getSpendingStatsHandler(req, res) {
     
     if (dateFilter) {
       categoryStatsQuery += ` ${dateFilter.replace('WHERE', 'AND')}`;
-    }
-    
-    if (currentUser.role !== 'admin') {
-      categoryStatsQuery += dateFilter ? ' AND' : ' WHERE';
-      categoryStatsQuery += ` s.user_id = $${params.length + 1}`;
-      params.push(currentUser.id);
     }
     
     categoryStatsQuery += ' GROUP BY c.id, c.name, c.monthly_budget ORDER BY c.name';
@@ -258,11 +241,6 @@ async function getSpendingStatsHandler(req, res) {
       totalQuery += ` WHERE s.date >= $${totalParamCount} AND s.date <= $${totalParamCount + 1}`;
       totalParams.push(firstDay, lastDay);
       totalParamCount += 2;
-    }
-    
-    if (currentUser.role !== 'admin') {
-      totalQuery += ` AND s.user_id = $${totalParamCount}`;
-      totalParams.push(currentUser.id);
     }
     
     const totalResult = await db.query(totalQuery, totalParams);
