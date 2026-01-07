@@ -53,15 +53,20 @@ REACT_APP_API_URL=http://YOUR_SERVER_IP:3001/api
 - Your server's IP address (e.g., `http://192.168.1.100:3001/api`)
 - Or your domain name (e.g., `http://budget.yourdomain.com:3001/api`)
 
+**Important**: If you change `BACKEND_PORT` (below), also update this URL to match the new port!
+
 ### Optional Environment Variables
 
 ```env
+BACKEND_PORT=3001
 CORS_ORIGIN=*
 FRONTEND_URL=http://localhost:80
 FRONTEND_PORT=80
 NODE_ENV=production
 PORT=3001
 ```
+
+**Note**: If port 3001 is already in use, change `BACKEND_PORT` to an available port (e.g., `3002`, `8080`, etc.)
 
 ## Complete Example for Portainer
 
@@ -79,13 +84,16 @@ DB_NAME=budget_app
 SESSION_SECRET=<generate-new-secret-here>
 JWT_SECRET=<generate-new-secret-here>
 
-# Frontend API URL (UPDATE WITH YOUR SERVER IP)
+# Port Configuration (change if ports are in use)
+BACKEND_PORT=3001
+FRONTEND_PORT=80
+
+# Frontend API URL (UPDATE WITH YOUR SERVER IP and PORT)
 REACT_APP_API_URL=http://<YOUR_SERVER_IP>:3001/api
 
 # Optional
 CORS_ORIGIN=*
 FRONTEND_URL=http://localhost:80
-FRONTEND_PORT=80
 ```
 
 ## Quick Setup Steps in Portainer

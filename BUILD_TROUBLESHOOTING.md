@@ -123,6 +123,42 @@ This error typically occurs when:
 3. Check available disk space
 4. Review Portainer logs for system-level errors
 
+### Error: "port is already allocated" or "Bind for 0.0.0.0:PORT failed"
+
+This means another container or service is using the port.
+
+**Solutions:**
+
+1. **Change the port** in environment variables:
+   ```env
+   BACKEND_PORT=3002
+   FRONTEND_PORT=8080
+   ```
+   Then update `REACT_APP_API_URL` to match:
+   ```env
+   REACT_APP_API_URL=http://YOUR_SERVER_IP:3002/api
+   ```
+
+2. **Find and stop the conflicting container**:
+   - In Portainer, go to **Containers**
+   - Look for containers using port 3001
+   - Stop or remove them if not needed
+
+3. **Check what's using the port** (on Docker host):
+   ```bash
+   # On Linux
+   sudo netstat -tulpn | grep 3001
+   # Or
+   sudo ss -tulpn | grep 3001
+   
+   # On Docker host, check containers
+   docker ps | grep 3001
+   ```
+
+4. **Use a different port range**:
+   - Backend: `3002`, `8080`, `8081`, etc.
+   - Frontend: `80`, `8080`, `3000`, etc.
+
 ## Still Having Issues?
 
 1. **Check Portainer version** - older versions may have build issues
@@ -130,4 +166,5 @@ This error typically occurs when:
 3. **Check Docker daemon logs** on the host system
 4. **Verify Git repository** is accessible from Portainer
 5. **Test with a simpler Dockerfile** to isolate the problem
+6. **Check port conflicts** - use `docker ps` or Portainer's container list
 

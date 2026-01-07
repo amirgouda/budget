@@ -6,7 +6,7 @@ services:
     build: .
     container_name: budget-backend
     ports:
-      - "3001:3001"
+      - "${BACKEND_PORT:-3001}:3001"
     environment:
       - NODE_ENV=production
       - PORT=3001
