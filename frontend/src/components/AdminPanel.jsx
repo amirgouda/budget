@@ -15,11 +15,14 @@ function AdminPanel({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('categories');
   const [categories, setCategories] = useState([]);
   const [members, setMembers] = useState([]);
+  const [paymentMethods, setPaymentMethods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [showMemberForm, setShowMemberForm] = useState(false);
+  const [showPaymentMethodForm, setShowPaymentMethodForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [editingMember, setEditingMember] = useState(null);
+  const [editingPaymentMethod, setEditingPaymentMethod] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,13 +31,15 @@ function AdminPanel({ user, onLogout }) {
 
   const loadData = async () => {
     try {
-      const [categoriesRes, membersRes] = await Promise.all([
+      const [categoriesRes, membersRes, paymentMethodsRes] = await Promise.all([
         api.get('/categories'),
         api.get('/members'),
+        api.get('/payment_methods'),
       ]);
 
       setCategories(categoriesRes.data.categories || []);
       setMembers(membersRes.data.members || []);
+      setPaymentMethods(paymentMethodsRes.data.paymentMethods || []);
     } catch (err) {
       console.error('Failed to load data:', err);
     } finally {
@@ -113,6 +118,51 @@ function AdminPanel({ user, onLogout }) {
     }
   };
 
+  const handlePaymentMethodSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = {
+      name: formData.get('name'),
+      icon: formData.get('icon') || null,
+      isDefault: formData.get('isDefault') === 'true',
+    };
+
+    try {
+      if (editingPaymentMethod) {
+        await api.put(`/payment_methods/${editingPaymentMethod.id}`, data);
+      } else {
+        await api.post('/payment_methods', data);
+      }
+      setShowPaymentMethodForm(false);
+      setEditingPaymentMethod(null);
+      loadData();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to save payment method');
+    }
+  };
+
+  const handleDeletePaymentMethod = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this payment method?')) {
+      return;
+    }
+
+    try {
+      await api.delete(`/payment_methods/${id}`);
+      loadData();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to delete payment method');
+    }
+  };
+
+  const handleSetDefaultPaymentMethod = async (id) => {
+    try {
+      await api.put('/payment_methods/default', { paymentMethodId: id });
+      loadData();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to set default payment method');
+    }
+  };
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -153,6 +203,12 @@ function AdminPanel({ user, onLogout }) {
             onClick={() => setActiveTab('members')}
           >
             Members
+          </button>
+          <button
+            className={`tab ${activeTab === 'payment_methods' ? 'active' : ''}`}
+            onClick={() => setActiveTab('payment_methods')}
+          >
+            Payment Methods
           </button>
         </div>
 
@@ -363,6 +419,140 @@ function AdminPanel({ user, onLogout }) {
                         Delete
                       </button>
                     )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'payment_methods' && (
+          <div className="admin-section">
+            <div className="section-header">
+              <h2>Payment Methods</h2>
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  setEditingPaymentMethod(null);
+                  setShowPaymentMethodForm(true);
+                }}
+              >
+                + Add Payment Method
+              </button>
+            </div>
+
+            {showPaymentMethodForm && (
+              <div className="modal-overlay" onClick={() => {
+                setShowPaymentMethodForm(false);
+                setEditingPaymentMethod(null);
+              }}>
+                <div className="modal" onClick={(e) => e.stopPropagation()}>
+                  <div className="modal-header">
+                    <h3>{editingPaymentMethod ? 'Edit Payment Method' : 'New Payment Method'}</h3>
+                    <button
+                      className="close-btn"
+                      onClick={() => {
+                        setShowPaymentMethodForm(false);
+                        setEditingPaymentMethod(null);
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <form onSubmit={handlePaymentMethodSubmit} className="admin-form">
+                    <div className="form-group">
+                      <label>Payment Method Name</label>
+                      <input
+                        type="text"
+                        name="name"
+                        defaultValue={editingPaymentMethod?.name || ''}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Icon (Emoji)</label>
+                      <input
+                        type="text"
+                        name="icon"
+                        defaultValue={editingPaymentMethod?.icon || ''}
+                        placeholder="💳"
+                        maxLength="2"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>
+                        <input
+                          type="checkbox"
+                          name="isDefault"
+                          value="true"
+                          defaultChecked={editingPaymentMethod?.is_default || false}
+                        />
+                        Set as default payment method
+                      </label>
+                    </div>
+                    <div className="form-actions">
+                      <button type="submit" className="btn btn-primary">
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => {
+                          setShowPaymentMethodForm(false);
+                          setEditingPaymentMethod(null);
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            <div className="admin-list">
+              {paymentMethods.map((method) => (
+                <div key={method.id} className="admin-item">
+                  <div className="admin-item-content">
+                    <h3>
+                      {method.icon && <span style={{ marginRight: '0.5rem' }}>{method.icon}</span>}
+                      {method.name}
+                      {method.is_default && (
+                        <span style={{ 
+                          marginLeft: '0.5rem', 
+                          fontSize: '0.85rem', 
+                          color: 'var(--success-color)',
+                          fontWeight: 'bold'
+                        }}>
+                          (Default)
+                        </span>
+                      )}
+                    </h3>
+                  </div>
+                  <div className="admin-item-actions">
+                    {!method.is_default && (
+                      <button
+                        className="btn btn-secondary btn-small"
+                        onClick={() => handleSetDefaultPaymentMethod(method.id)}
+                      >
+                        Set Default
+                      </button>
+                    )}
+                    <button
+                      className="btn btn-secondary btn-small"
+                      onClick={() => {
+                        setEditingPaymentMethod(method);
+                        setShowPaymentMethodForm(true);
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="btn btn-danger btn-small"
+                      onClick={() => handleDeletePaymentMethod(method.id)}
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
               ))}

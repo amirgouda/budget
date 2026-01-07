@@ -61,6 +61,7 @@ async function initDatabase() {
         id SERIAL PRIMARY KEY,
         name VARCHAR(50) UNIQUE NOT NULL,
         icon VARCHAR(50),
+        is_default BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -68,22 +69,30 @@ async function initDatabase() {
 
     // Insert default payment methods
     const defaultMethods = [
-      { name: 'Cash', icon: '💵' },
-      { name: 'Credit Card', icon: '💳' },
-      { name: 'Debit Card', icon: '💳' },
-      { name: 'Bank Transfer', icon: '🏦' },
-      { name: 'Mobile Wallet', icon: '📱' },
-      { name: 'Online Payment', icon: '🌐' }
+      { name: 'Cash', icon: '💵', isDefault: true },
+      { name: 'Credit Card', icon: '💳', isDefault: false },
+      { name: 'Debit Card', icon: '💳', isDefault: false },
+      { name: 'Bank Transfer', icon: '🏦', isDefault: false },
+      { name: 'Mobile Wallet', icon: '📱', isDefault: false },
+      { name: 'Online Payment', icon: '🌐', isDefault: false }
     ];
 
     for (const method of defaultMethods) {
       await appClient.query(`
-        INSERT INTO payment_methods (name, icon)
-        VALUES ($1, $2)
+        INSERT INTO payment_methods (name, icon, is_default)
+        VALUES ($1, $2, $3)
         ON CONFLICT (name) DO NOTHING
-      `, [method.name, method.icon]);
+      `, [method.name, method.icon, method.isDefault]);
     }
     console.log('✓ Inserted default payment methods');
+
+    // Create unique constraint to ensure only one default
+    await appClient.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_payment_methods_single_default 
+      ON payment_methods (is_default) 
+      WHERE is_default = TRUE
+    `);
+    console.log('✓ Created unique constraint for single default');
 
     // Users table
     await appClient.query(`
@@ -92,7 +101,6 @@ async function initDatabase() {
         username VARCHAR(50) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
         role VARCHAR(20) NOT NULL DEFAULT 'member' CHECK (role IN ('admin', 'member')),
-        default_payment_method_id INTEGER REFERENCES payment_methods(id) ON DELETE SET NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);

@@ -57,9 +57,12 @@ module.exports = async (req, res) => {
   if (req.method === 'GET') {
     return paymentMethodHandlers.getDefaultPaymentMethodHandler(req, res);
   } else if (req.method === 'PUT') {
+    // Admin only
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
     return paymentMethodHandlers.setDefaultPaymentMethodHandler(req, res);
   } else {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 };
-

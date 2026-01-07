@@ -106,7 +106,6 @@ function AddSpending({ categories, onAdd, onClose, initialCategoryId }) {
           <PaymentMethodSelector
             selectedPaymentMethod={paymentMethodId}
             onSelect={setPaymentMethodId}
-            showDefaultOption={true}
           />
 
           <div className="form-group">

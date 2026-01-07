@@ -1,5 +1,5 @@
 /**
- * Vercel serverless function for payment methods
+ * Vercel serverless function for payment method by ID (admin only)
  */
 
 const paymentMethodHandlers = require('../../handlers/payment_methods');
@@ -40,7 +40,7 @@ function authenticateRequest(req) {
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
@@ -54,15 +54,22 @@ module.exports = async (req, res) => {
     return res.status(401).json({ error: error.message });
   }
 
-  if (req.method === 'GET') {
-    return paymentMethodHandlers.getPaymentMethodsHandler(req, res);
-  } else if (req.method === 'POST') {
-    // Admin only
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-    return paymentMethodHandlers.createPaymentMethodHandler(req, res);
+  // Admin only
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+
+  // Get ID from query or path
+  const id = req.query.id || req.url.split('/').pop();
+
+  if (req.method === 'PUT') {
+    req.params = { id };
+    return paymentMethodHandlers.updatePaymentMethodHandler(req, res);
+  } else if (req.method === 'DELETE') {
+    req.params = { id };
+    return paymentMethodHandlers.deletePaymentMethodHandler(req, res);
   } else {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 };
+

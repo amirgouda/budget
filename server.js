@@ -65,7 +65,10 @@ app.post('/api/subcategories', auth.getAuthMiddleware(), subcategoryHandlers.cre
 // Payment method routes
 app.get('/api/payment_methods', auth.getAuthMiddleware(), paymentMethodHandlers.getPaymentMethodsHandler);
 app.get('/api/payment_methods/default', auth.getAuthMiddleware(), paymentMethodHandlers.getDefaultPaymentMethodHandler);
-app.put('/api/payment_methods/default', auth.getAuthMiddleware(), paymentMethodHandlers.setDefaultPaymentMethodHandler);
+app.post('/api/payment_methods', auth.getAuthMiddleware(), auth.requireAdmin, paymentMethodHandlers.createPaymentMethodHandler);
+app.put('/api/payment_methods/:id', auth.getAuthMiddleware(), auth.requireAdmin, paymentMethodHandlers.updatePaymentMethodHandler);
+app.delete('/api/payment_methods/:id', auth.getAuthMiddleware(), auth.requireAdmin, paymentMethodHandlers.deletePaymentMethodHandler);
+app.put('/api/payment_methods/default', auth.getAuthMiddleware(), auth.requireAdmin, paymentMethodHandlers.setDefaultPaymentMethodHandler);
 
 // Error handling middleware (must be before catch-all route)
 app.use((err, req, res, next) => {

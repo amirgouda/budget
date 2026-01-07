@@ -125,15 +125,14 @@ async function addSpendingHandler(req, res) {
       }
     }
 
-    // If no payment method provided, try to get user's default
+    // If no payment method provided, use global default
     let finalPaymentMethodId = paymentMethodId;
     if (!finalPaymentMethodId) {
-      const userResult = await db.query(
-        'SELECT default_payment_method_id FROM users WHERE id = $1',
-        [userId]
+      const defaultResult = await db.query(
+        'SELECT id FROM payment_methods WHERE is_default = TRUE LIMIT 1'
       );
-      if (userResult.rows.length > 0 && userResult.rows[0].default_payment_method_id) {
-        finalPaymentMethodId = userResult.rows[0].default_payment_method_id;
+      if (defaultResult.rows.length > 0) {
+        finalPaymentMethodId = defaultResult.rows[0].id;
       }
     }
 
