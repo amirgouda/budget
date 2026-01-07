@@ -55,6 +55,36 @@ async function initDatabase() {
     // Create tables
     console.log('Creating tables...\n');
 
+    // Payment methods table (created first as it's referenced by users)
+    await appClient.query(`
+      CREATE TABLE IF NOT EXISTS payment_methods (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(50) UNIQUE NOT NULL,
+        icon VARCHAR(50),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✓ Created payment_methods table');
+
+    // Insert default payment methods
+    const defaultMethods = [
+      { name: 'Cash', icon: '💵' },
+      { name: 'Credit Card', icon: '💳' },
+      { name: 'Debit Card', icon: '💳' },
+      { name: 'Bank Transfer', icon: '🏦' },
+      { name: 'Mobile Wallet', icon: '📱' },
+      { name: 'Online Payment', icon: '🌐' }
+    ];
+
+    for (const method of defaultMethods) {
+      await appClient.query(`
+        INSERT INTO payment_methods (name, icon)
+        VALUES ($1, $2)
+        ON CONFLICT (name) DO NOTHING
+      `, [method.name, method.icon]);
+    }
+    console.log('✓ Inserted default payment methods');
+
     // Users table
     await appClient.query(`
       CREATE TABLE IF NOT EXISTS users (
@@ -62,6 +92,7 @@ async function initDatabase() {
         username VARCHAR(50) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
         role VARCHAR(20) NOT NULL DEFAULT 'member' CHECK (role IN ('admin', 'member')),
+        default_payment_method_id INTEGER REFERENCES payment_methods(id) ON DELETE SET NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -89,6 +120,7 @@ async function initDatabase() {
         amount DECIMAL(10, 2) NOT NULL,
         description TEXT,
         date DATE NOT NULL DEFAULT CURRENT_DATE,
+        payment_method_id INTEGER REFERENCES payment_methods(id) ON DELETE SET NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -117,6 +149,9 @@ async function initDatabase() {
     `);
     await appClient.query(`
       CREATE INDEX IF NOT EXISTS idx_spendings_date ON spendings(date)
+    `);
+    await appClient.query(`
+      CREATE INDEX IF NOT EXISTS idx_spendings_payment_method_id ON spendings(payment_method_id)
     `);
     await appClient.query(`
       CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(session_token)

@@ -225,7 +225,19 @@ function Dashboard({ user, onLogout }) {
                 <div key={spending.id} className="spending-item">
                     <div className="spending-main">
                     <div className="spending-info">
-                      <h3>{spending.category_name}</h3>
+                      <h3>
+                        {spending.category_name}
+                        {spending.payment_method_icon && (
+                          <span className="spending-payment-method">
+                            <span className="spending-payment-method-icon">
+                              {spending.payment_method_icon}
+                            </span>
+                            {spending.payment_method_name && (
+                              <span>{spending.payment_method_name}</span>
+                            )}
+                          </span>
+                        )}
+                      </h3>
                       {spending.subcategory_name && (
                         <p className="spending-subcategory">{spending.subcategory_name}</p>
                       )}

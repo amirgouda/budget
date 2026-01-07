@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import CategorySelector from './CategorySelector';
 import SubcategorySelector from './SubcategorySelector';
+import PaymentMethodSelector from './PaymentMethodSelector';
 
 function AddSpending({ categories, onAdd, onClose, initialCategoryId }) {
   const [categoryId, setCategoryId] = useState(initialCategoryId || '');
   const [subcategoryId, setSubcategoryId] = useState(null);
+  const [paymentMethodId, setPaymentMethodId] = useState(null);
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
@@ -49,6 +51,7 @@ function AddSpending({ categories, onAdd, onClose, initialCategoryId }) {
         categoryId,
         amount: parseFloat(amount),
         subcategoryId: subcategoryId || null,
+        paymentMethodId: paymentMethodId || null,
         date,
       });
 
@@ -56,6 +59,7 @@ function AddSpending({ categories, onAdd, onClose, initialCategoryId }) {
       // Reset form
       setAmount('');
       setSubcategoryId(null);
+      setPaymentMethodId(null);
       setDate(new Date().toISOString().split('T')[0]);
       if (onClose) {
         onClose();
@@ -97,6 +101,12 @@ function AddSpending({ categories, onAdd, onClose, initialCategoryId }) {
             categoryId={categoryId}
             selectedSubcategory={subcategoryId}
             onSelect={setSubcategoryId}
+          />
+
+          <PaymentMethodSelector
+            selectedPaymentMethod={paymentMethodId}
+            onSelect={setPaymentMethodId}
+            showDefaultOption={true}
           />
 
           <div className="form-group">

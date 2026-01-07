@@ -26,11 +26,15 @@ async function getSpendingsHandler(req, res) {
         c.name as category_name,
         c.monthly_budget,
         s.subcategory_id,
-        sc.name as subcategory_name
+        sc.name as subcategory_name,
+        s.payment_method_id,
+        pm.name as payment_method_name,
+        pm.icon as payment_method_icon
       FROM spendings s
       JOIN users u ON s.user_id = u.id
       JOIN spending_categories c ON s.category_id = c.id
       LEFT JOIN subcategories sc ON s.subcategory_id = sc.id
+      LEFT JOIN payment_methods pm ON s.payment_method_id = pm.id
       WHERE 1=1
     `;
     const params = [];
@@ -81,7 +85,7 @@ async function getSpendingsHandler(req, res) {
  */
 async function addSpendingHandler(req, res) {
   try {
-    const { categoryId, amount, subcategoryId, date } = req.body;
+    const { categoryId, amount, subcategoryId, date, paymentMethodId } = req.body;
     const userId = req.user.id;
 
     if (!categoryId || !amount) {
@@ -110,16 +114,39 @@ async function addSpendingHandler(req, res) {
       }
     }
 
+    // Verify payment method exists if provided
+    if (paymentMethodId) {
+      const paymentMethodResult = await db.query(
+        'SELECT id FROM payment_methods WHERE id = $1',
+        [paymentMethodId]
+      );
+      if (paymentMethodResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Payment method not found' });
+      }
+    }
+
+    // If no payment method provided, try to get user's default
+    let finalPaymentMethodId = paymentMethodId;
+    if (!finalPaymentMethodId) {
+      const userResult = await db.query(
+        'SELECT default_payment_method_id FROM users WHERE id = $1',
+        [userId]
+      );
+      if (userResult.rows.length > 0 && userResult.rows[0].default_payment_method_id) {
+        finalPaymentMethodId = userResult.rows[0].default_payment_method_id;
+      }
+    }
+
     const spendingDate = date || new Date().toISOString().split('T')[0];
 
     const result = await db.query(
-      `INSERT INTO spendings (user_id, category_id, amount, subcategory_id, date)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, user_id, category_id, amount, subcategory_id, date, created_at`,
-      [userId, categoryId, amountNum, subcategoryId || null, spendingDate]
+      `INSERT INTO spendings (user_id, category_id, amount, subcategory_id, date, payment_method_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, user_id, category_id, amount, subcategory_id, date, payment_method_id, created_at`,
+      [userId, categoryId, amountNum, subcategoryId || null, spendingDate, finalPaymentMethodId || null]
     );
 
-    // Get full spending details with category and subcategory names
+    // Get full spending details with category, subcategory, and payment method names
     const fullResult = await db.query(
       `SELECT 
         s.id,
@@ -132,11 +159,15 @@ async function addSpendingHandler(req, res) {
         c.name as category_name,
         c.monthly_budget,
         s.subcategory_id,
-        sc.name as subcategory_name
+        sc.name as subcategory_name,
+        s.payment_method_id,
+        pm.name as payment_method_name,
+        pm.icon as payment_method_icon
       FROM spendings s
       JOIN users u ON s.user_id = u.id
       JOIN spending_categories c ON s.category_id = c.id
       LEFT JOIN subcategories sc ON s.subcategory_id = sc.id
+      LEFT JOIN payment_methods pm ON s.payment_method_id = pm.id
       WHERE s.id = $1`,
       [result.rows[0].id]
     );
