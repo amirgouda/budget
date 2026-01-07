@@ -5,17 +5,17 @@
  */
 
 const { Client } = require('pg');
-require('dotenv').config();
 
+// Hardcoded database configuration
 const dbConfig = {
-  host: process.env.DB_HOST || 'am.lan',
-  user: process.env.DB_USER || 'appuser',
-  password: process.env.DB_PASSWORD || 'P0stGress',
-  port: parseInt(process.env.DB_PORT || '5432'),
+  host: 'am.lan',
+  user: 'appuser',
+  password: 'P0stGress',
+  port: 5432,
   database: 'postgres' // Connect to default database first
 };
 
-const targetDatabase = process.env.DB_NAME || 'budget_app';
+const targetDatabase = 'budget_app';
 
 async function initDatabase() {
   const client = new Client(dbConfig);
