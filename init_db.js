@@ -8,7 +8,7 @@ const { Client } = require('pg');
 
 // Hardcoded database configuration
 const dbConfig = {
-  host: 'am.lan',
+  host: '192.168.0.100',
   user: 'appuser',
   password: 'P0stGress',
   port: 5432,

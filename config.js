@@ -6,7 +6,7 @@
 const config = {
   // Database configuration - hardcoded
   database: {
-    host: 'am.lan',
+    host: '192.168.0.100',
     port: 5432,
     user: 'appuser',
     password: 'P0stGress',
