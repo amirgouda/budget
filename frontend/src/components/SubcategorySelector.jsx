@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../api';
 
-function SubcategorySelector({ categoryId, selectedSubcategory, onSelect, required = false }) {
+function SubcategorySelector({ categoryId, selectedSubcategory, onSelect, required = false, inputRef: externalInputRef }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [subcategories, setSubcategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [creating, setCreating] = useState(false);
   const dropdownRef = useRef(null);
-  const inputRef = useRef(null);
+  const internalInputRef = useRef(null);
+  const inputRef = externalInputRef || internalInputRef;
   const isInteractingRef = useRef(false);
 
   useEffect(() => {
@@ -203,7 +204,7 @@ function SubcategorySelector({ categoryId, selectedSubcategory, onSelect, requir
           onFocus={handleFocus}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          placeholder="Search or type to add new subcategory..."
+          placeholder="What did you buy? Search or add new..."
           autoComplete="off"
         />
         {loading && <div className="loading-indicator">⏳</div>}

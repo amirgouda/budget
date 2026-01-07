@@ -204,15 +204,6 @@ function Dashboard({ user, onLogout }) {
         <section className="spendings-section">
           <div className="section-header">
             <h2>Recent Spendings</h2>
-            <button
-              className="btn btn-primary btn-large"
-              onClick={() => {
-                setSelectedCategoryId(null);
-                setShowAddSpending(true);
-              }}
-            >
-              + Add Spending
-            </button>
           </div>
 
           {spendings.length === 0 ? (
