@@ -19,6 +19,7 @@ function Dashboard({ user, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [showAddSpending, setShowAddSpending] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [showPaymentBreakdown, setShowPaymentBreakdown] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,8 +28,13 @@ function Dashboard({ user, onLogout }) {
 
   const loadData = async () => {
     try {
+      // Get current month date range
+      const now = new Date();
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      
       const [spendingsRes, categoriesRes, statsRes] = await Promise.all([
-        api.get('/spendings?limit=50'),
+        api.get(`/spendings?startDate=${firstDay}&endDate=${lastDay}&limit=1000`),
         api.get('/categories'),
         api.get('/spendings/stats'),
       ]);
@@ -73,6 +79,36 @@ function Dashboard({ user, onLogout }) {
 
   const formatCurrency = (amount) => {
     return `${parseFloat(amount).toFixed(2)} EGP`;
+  };
+
+  // Calculate payment method totals for current month
+  const getPaymentMethodTotals = () => {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+
+    const monthlySpendings = spendings.filter((s) => {
+      const spendingDate = s.date.split('T')[0];
+      return spendingDate >= firstDay && spendingDate <= lastDay;
+    });
+
+    const totals = {};
+    monthlySpendings.forEach((spending) => {
+      if (spending.payment_method_id) {
+        const key = spending.payment_method_id;
+        if (!totals[key]) {
+          totals[key] = {
+            id: spending.payment_method_id,
+            name: spending.payment_method_name || 'Unknown',
+            icon: spending.payment_method_icon || '💳',
+            amount: 0,
+          };
+        }
+        totals[key].amount += parseFloat(spending.amount || 0);
+      }
+    });
+
+    return Object.values(totals).sort((a, b) => b.amount - a.amount);
   };
 
   const calculateDailySpendingHealth = (monthlyBudget, totalSpent) => {
@@ -194,9 +230,35 @@ function Dashboard({ user, onLogout }) {
                 );
               })}
             </div>
-            <div className="total-spending">
+            <div 
+              className={`total-spending ${showPaymentBreakdown ? 'collapsed' : ''}`}
+              onClick={() => setShowPaymentBreakdown(!showPaymentBreakdown)}
+              style={{ cursor: 'pointer' }}
+            >
               <strong>Total Spent This Month: {formatCurrency(stats.total || 0)}</strong>
+              <span className="total-spending-toggle">▼</span>
             </div>
+
+            {showPaymentBreakdown && (
+              <div className="payment-method-breakdown">
+                <div className="payment-method-breakdown-title">Spending by Payment Method</div>
+                <div className="payment-method-breakdown-cards">
+                  {getPaymentMethodTotals().length > 0 ? (
+                    getPaymentMethodTotals().map((pm) => (
+                      <div key={pm.id} className="payment-method-breakdown-card">
+                        <div className="payment-method-breakdown-icon">{pm.icon}</div>
+                        <div className="payment-method-breakdown-name">{pm.name}</div>
+                        <div className="payment-method-breakdown-amount">{formatCurrency(pm.amount)}</div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="empty-state" style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                      No payment method data available
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </section>
         )}
 

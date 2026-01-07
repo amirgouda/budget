@@ -462,6 +462,135 @@ body {
   box-shadow: var(--shadow-sm);
   font-size: 1.1rem;
   color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s, transform 0.1s;
+  position: relative;
+}
+
+.total-spending:hover {
+  background-color: var(--bg-secondary);
+}
+
+.total-spending:active {
+  transform: scale(0.98);
+}
+
+.total-spending-toggle {
+  display: inline-block;
+  margin-left: 0.5rem;
+  transition: transform 0.3s;
+  font-size: 0.9rem;
+}
+
+.total-spending.collapsed .total-spending-toggle {
+  transform: rotate(-90deg);
+}
+
+/* Payment Method Breakdown */
+.payment-method-breakdown {
+  margin-top: 1rem;
+  transition: opacity 0.3s ease, max-height 0.5s ease, margin 0.3s ease;
+  overflow: hidden;
+  max-height: 1000px;
+  opacity: 1;
+}
+
+.payment-method-breakdown-title {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.payment-method-breakdown-cards {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+.payment-method-breakdown-cards::-webkit-scrollbar {
+  height: 6px;
+}
+
+.payment-method-breakdown-cards::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.payment-method-breakdown-cards::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.payment-method-breakdown-card {
+  flex: 0 0 auto;
+  width: 120px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 120px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.payment-method-breakdown-card:active {
+  transform: scale(0.98);
+}
+
+.payment-method-breakdown-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.payment-method-breakdown-name {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-align: center;
+  font-weight: 500;
+}
+
+.payment-method-breakdown-amount {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  text-align: center;
+}
+
+/* Tablet/Desktop: Grid Layout for Payment Method Breakdown */
+@media (min-width: 640px) {
+  .payment-method-breakdown-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    overflow: visible;
+    gap: 1rem;
+  }
+
+  .payment-method-breakdown-card {
+    width: 100%;
+    min-height: 140px;
+  }
+}
+
+@media (min-width: 768px) {
+  .payment-method-breakdown-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .payment-method-breakdown-cards {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 /* Spendings Section */
@@ -685,13 +814,15 @@ body {
   flex-direction: column;
   gap: 1.25rem;
   flex: 1;
-  padding-bottom: 5rem; /* Space for fixed submit button */
+  padding-bottom: 0;
+  min-height: 0;
 }
 
 .form-actions {
   display: flex;
   gap: 1rem;
-  margin-top: 0.5rem;
+  margin-top: auto;
+  padding-top: 1rem;
 }
 
 .form-actions .btn {
@@ -699,24 +830,24 @@ body {
 }
 
 .btn-submit-fixed {
-  position: fixed;
+  position: sticky;
   bottom: 0;
   left: 0;
   right: 0;
-  max-width: 600px;
-  margin: 0 auto;
+  width: 100%;
   border-radius: 0;
   z-index: 1001;
   box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+  margin-top: auto;
 }
 
 @media (min-width: 640px) {
   .btn-submit-fixed {
     position: sticky;
-    bottom: 1rem;
-    border-radius: var(--radius-md);
-    margin: 1rem auto 0;
-    max-width: calc(100% - 3rem);
+    bottom: 0;
+    border-radius: 0;
+    margin: 0;
+    max-width: 100%;
   }
 }
 
