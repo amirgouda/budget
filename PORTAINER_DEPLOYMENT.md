@@ -59,8 +59,9 @@ CORS_ORIGIN=*
 FRONTEND_URL=http://localhost:80
 
 # Frontend Configuration
-REACT_APP_API_URL=http://your-server-ip:3001/api
-FRONTEND_PORT=80
+REACT_APP_API_URL=http://your-server-ip:8081/api
+BACKEND_PORT=8081
+FRONTEND_PORT=8080
 ```
 
 **Important Notes:**
@@ -102,9 +103,9 @@ Alternatively, you can use Portainer's **Execute container** feature:
 
 #### Step 7: Access Your Application
 
-- **Frontend**: `http://your-server-ip:80` (or the port you configured)
-- **Backend API**: `http://your-server-ip:3001`
-- **Health Check**: `http://your-server-ip:3001/health`
+- **Frontend**: `http://your-server-ip:8080` (or the port you configured)
+- **Backend API**: `http://your-server-ip:8081`
+- **Health Check**: `http://your-server-ip:8081/health`
 
 ### Method 2: Using Portainer Compose Editor
 
@@ -134,8 +135,8 @@ If you want to use a domain name instead of IP addresses:
 
 1. Set up a reverse proxy (Nginx, Traefik, etc.)
 2. Point it to:
-   - Frontend: `http://budget-frontend:80`
-   - Backend: `http://budget-backend:3001`
+   - Frontend: `http://budget-frontend:80` (internal container port)
+   - Backend: `http://budget-backend:3001` (internal container port)
 3. Update `REACT_APP_API_URL` and `FRONTEND_URL` environment variables
 
 ### 3. Set Up SSL/HTTPS (Optional)
@@ -176,9 +177,9 @@ Or create a scheduled backup job in Portainer.
 
 1. Check backend logs: `Containers` → `budget-backend` → `Logs`
 2. Verify database connection:
-   - Ensure `postgres` service is healthy
+   - Ensure PostgreSQL is accessible
    - Check database credentials in environment variables
-3. Check if port 3001 is available
+3. Check if the configured backend port (default: 8081) is available
 
 ### Frontend shows connection errors
 
@@ -201,12 +202,17 @@ Or create a scheduled backup job in Portainer.
 
 ### Port conflicts
 
-1. Check if ports 80, 3001, or 5432 are already in use
-2. Modify port mappings in `docker-compose.yml`:
+1. Default ports are 8081 (backend) and 8080 (frontend) to avoid common conflicts
+2. If these are in use, change via environment variables:
+   ```env
+   BACKEND_PORT=8082
+   FRONTEND_PORT=8081
+   ```
+3. Or modify port mappings in `docker-compose.yml`:
    ```yaml
    ports:
-     - "8080:80"  # Change frontend port
-     - "3002:3001"  # Change backend port
+     - "${BACKEND_PORT:-8082}:3001"  # Change backend port
+     - "${FRONTEND_PORT:-8081}:80"   # Change frontend port
    ```
 
 ## Updating the Application
@@ -238,9 +244,10 @@ If you used the Git repository method:
 | `SESSION_SECRET` | **Yes** | Session encryption secret (change from default) |
 | `JWT_SECRET` | **Yes** | JWT token secret (change from default) |
 | `CORS_ORIGIN` | No | Allowed CORS origins (default: `*`) |
-| `FRONTEND_URL` | No | Frontend URL for CORS (default: `http://localhost:80`) |
-| `REACT_APP_API_URL` | **Yes** | API endpoint for frontend (update with your server IP) |
-| `FRONTEND_PORT` | No | Frontend container port (default: `80`) |
+| `FRONTEND_URL` | No | Frontend URL for CORS (default: `http://localhost:8080`) |
+| `REACT_APP_API_URL` | **Yes** | API endpoint for frontend (default: `http://localhost:8081/api`) |
+| `BACKEND_PORT` | No | Backend external port (default: `8081`) |
+| `FRONTEND_PORT` | No | Frontend external port (default: `8080`) |
 
 ## Security Best Practices
 

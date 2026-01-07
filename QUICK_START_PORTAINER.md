@@ -33,10 +33,11 @@ SESSION_SECRET=your-random-session-secret-min-32-chars
 JWT_SECRET=your-random-jwt-secret-min-32-chars
 
 # API URL - Replace with your server IP/domain
-REACT_APP_API_URL=http://YOUR_SERVER_IP:3001/api
+REACT_APP_API_URL=http://YOUR_SERVER_IP:8081/api
 
-# Optional
-FRONTEND_PORT=80
+# Optional (defaults shown)
+BACKEND_PORT=8081
+FRONTEND_PORT=8080
 CORS_ORIGIN=*
 FRONTEND_URL=http://localhost:80
 ```
@@ -60,8 +61,8 @@ After deployment:
 
 ### 6. Access
 
-- **Frontend**: `http://YOUR_SERVER_IP:80`
-- **Backend API**: `http://YOUR_SERVER_IP:3001`
+- **Frontend**: `http://YOUR_SERVER_IP:8080`
+- **Backend API**: `http://YOUR_SERVER_IP:8081`
 
 ## Generate Secure Secrets
 
@@ -89,7 +90,8 @@ openssl rand -base64 32
 - Rebuild frontend if you changed API URL: Stack → Editor → Update
 
 **Port already in use?**
-- Change `FRONTEND_PORT` to another port (e.g., `8080`)
+- Default ports are now 8081 (backend) and 8080 (frontend)
+- Change `BACKEND_PORT` or `FRONTEND_PORT` environment variables if needed
 - Or modify port mappings in docker-compose.yml
 
 ## Full Documentation

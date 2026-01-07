@@ -46,27 +46,27 @@ JWT_SECRET=M9nP2qR5sT8uV1wX4yZ7aB0cD3eF6gH9iJ2kL5mN8oP1qR4sT7uV0wX3yZ6a
 ### Frontend Configuration (Required)
 
 ```env
-REACT_APP_API_URL=http://YOUR_SERVER_IP:3001/api
+REACT_APP_API_URL=http://YOUR_SERVER_IP:8081/api
 ```
 
 **Replace `YOUR_SERVER_IP` with:**
-- Your server's IP address (e.g., `http://192.168.1.100:3001/api`)
-- Or your domain name (e.g., `http://budget.yourdomain.com:3001/api`)
+- Your server's IP address (e.g., `http://192.168.1.100:8081/api`)
+- Or your domain name (e.g., `http://budget.yourdomain.com:8081/api`)
 
 **Important**: If you change `BACKEND_PORT` (below), also update this URL to match the new port!
 
 ### Optional Environment Variables
 
 ```env
-BACKEND_PORT=3001
+BACKEND_PORT=8081
 CORS_ORIGIN=*
-FRONTEND_URL=http://localhost:80
-FRONTEND_PORT=80
+FRONTEND_URL=http://localhost:8080
+FRONTEND_PORT=8080
 NODE_ENV=production
 PORT=3001
 ```
 
-**Note**: If port 3001 is already in use, change `BACKEND_PORT` to an available port (e.g., `3002`, `8080`, etc.)
+**Note**: Default ports are now 8081 (backend) and 8080 (frontend) to avoid conflicts. Change if needed.
 
 ## Complete Example for Portainer
 
@@ -84,16 +84,16 @@ DB_NAME=budget_app
 SESSION_SECRET=<generate-new-secret-here>
 JWT_SECRET=<generate-new-secret-here>
 
-# Port Configuration (change if ports are in use)
-BACKEND_PORT=3001
-FRONTEND_PORT=80
+# Port Configuration (defaults: 8081 for backend, 8080 for frontend)
+BACKEND_PORT=8081
+FRONTEND_PORT=8080
 
 # Frontend API URL (UPDATE WITH YOUR SERVER IP and PORT)
-REACT_APP_API_URL=http://<YOUR_SERVER_IP>:3001/api
+REACT_APP_API_URL=http://<YOUR_SERVER_IP>:8081/api
 
 # Optional
 CORS_ORIGIN=*
-FRONTEND_URL=http://localhost:80
+FRONTEND_URL=http://localhost:8080
 ```
 
 ## Quick Setup Steps in Portainer
@@ -148,7 +148,7 @@ After deployment, test the connection:
 - Check firewall/network rules
 
 **Frontend can't reach API?**
-- Verify `REACT_APP_API_URL` matches your server IP
-- Check backend container is running on port 3001
+- Verify `REACT_APP_API_URL` matches your server IP and port (default: 8081)
+- Check backend container is running on the configured port
 - Verify CORS settings allow your frontend origin
 

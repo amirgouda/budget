@@ -16,7 +16,7 @@ RUN npm install --no-audit --prefer-offline || \
 COPY . .
 
 # Set build-time environment variable (default if not provided)
-ARG REACT_APP_API_URL=http://localhost:3001/api
+ARG REACT_APP_API_URL=http://localhost:8081/api
 ENV REACT_APP_API_URL=$REACT_APP_API_URL
 
 # Build the React app

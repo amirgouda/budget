@@ -129,35 +129,39 @@ This means another container or service is using the port.
 
 **Solutions:**
 
-1. **Change the port** in environment variables:
+1. **Default ports are now 8081 (backend) and 8080 (frontend)** to avoid common conflicts
+   - If these are in use, change in environment variables:
    ```env
-   BACKEND_PORT=3002
-   FRONTEND_PORT=8080
+   BACKEND_PORT=8082
+   FRONTEND_PORT=8081
    ```
    Then update `REACT_APP_API_URL` to match:
    ```env
-   REACT_APP_API_URL=http://YOUR_SERVER_IP:3002/api
+   REACT_APP_API_URL=http://YOUR_SERVER_IP:8082/api
    ```
 
 2. **Find and stop the conflicting container**:
    - In Portainer, go to **Containers**
-   - Look for containers using port 3001
+   - Look for containers using ports 8081 or 8080
    - Stop or remove them if not needed
 
 3. **Check what's using the port** (on Docker host):
    ```bash
    # On Linux
-   sudo netstat -tulpn | grep 3001
+   sudo netstat -tulpn | grep 8081
+   sudo netstat -tulpn | grep 8080
    # Or
-   sudo ss -tulpn | grep 3001
+   sudo ss -tulpn | grep 8081
+   sudo ss -tulpn | grep 8080
    
    # On Docker host, check containers
-   docker ps | grep 3001
+   docker ps | grep 8081
+   docker ps | grep 8080
    ```
 
 4. **Use a different port range**:
-   - Backend: `3002`, `8080`, `8081`, etc.
-   - Frontend: `80`, `8080`, `3000`, etc.
+   - Backend: `8082`, `8083`, `9000`, etc.
+   - Frontend: `8081`, `3000`, `9001`, etc.
 
 ## Still Having Issues?
 
