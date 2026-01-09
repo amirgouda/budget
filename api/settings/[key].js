@@ -55,7 +55,18 @@ module.exports = async (req, res) => {
     return res.status(403).json({ error: 'Admin access required' });
   }
 
-  req.params = { key: req.query.key };
+  // Extract key from URL path (Vercel dynamic routes)
+  // URL format: /api/settings/month_start_day
+  // The key is the last segment of the path
+  const urlPath = req.url || req.path || '';
+  const pathSegments = urlPath.split('/').filter(segment => segment);
+  const key = pathSegments[pathSegments.length - 1] || req.query.key;
+
+  if (!key) {
+    return res.status(400).json({ error: 'Setting key is required' });
+  }
+
+  req.params = { key };
 
   if (req.method === 'PUT') {
     return settingsHandlers.updateSettingHandler(req, res);

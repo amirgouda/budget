@@ -23,7 +23,13 @@ async function getSettingsHandler(req, res) {
     res.json({ settings });
   } catch (error) {
     console.error('Get settings error:', error);
-    res.status(500).json({ error: 'Failed to get settings' });
+    // Check if it's a table doesn't exist error
+    if (error.message && error.message.includes('does not exist')) {
+      return res.status(500).json({ 
+        error: 'Settings table does not exist. Please run the migration script: node migrate_add_settings_table.js' 
+      });
+    }
+    res.status(500).json({ error: 'Failed to get settings', details: error.message });
   }
 }
 
@@ -69,7 +75,13 @@ async function updateSettingHandler(req, res) {
     });
   } catch (error) {
     console.error('Update setting error:', error);
-    res.status(500).json({ error: 'Failed to update setting' });
+    // Check if it's a table doesn't exist error
+    if (error.message && error.message.includes('does not exist')) {
+      return res.status(500).json({ 
+        error: 'Settings table does not exist. Please run the migration script: node migrate_add_settings_table.js' 
+      });
+    }
+    res.status(500).json({ error: 'Failed to update setting', details: error.message });
   }
 }
 
