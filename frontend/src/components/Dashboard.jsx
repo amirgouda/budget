@@ -251,6 +251,28 @@ function Dashboard({ user, onLogout }) {
                             ({dailyHealth.daysPassed}/{dailyHealth.totalDaysInMonth} days)
                           </span>
                         </div>
+                        {(() => {
+                          // Calculate expected spending for days passed
+                          const expectedSpending = dailyHealth.expectedDaily * dailyHealth.daysPassed;
+                          const difference = spent - expectedSpending;
+                          
+                          if (difference > 0) {
+                            // Over budget - show overbudget amount
+                            return (
+                              <div className="insight-overbudget" style={{ color: 'var(--danger-color)', marginTop: '0.5rem', fontSize: '0.9rem' }}>
+                                Over budget by: <strong>{formatCurrency(difference)}</strong>
+                              </div>
+                            );
+                          } else if (difference < 0) {
+                            // Under budget - show buffered amount
+                            return (
+                              <div className="insight-buffered" style={{ color: 'var(--success-color)', marginTop: '0.5rem', fontSize: '0.9rem' }}>
+                                Buffered: <strong>{formatCurrency(Math.abs(difference))}</strong>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     )}
                   </div>
