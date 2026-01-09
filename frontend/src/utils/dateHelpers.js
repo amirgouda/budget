@@ -14,6 +14,31 @@ function getLastDayOfMonth(year, month) {
 }
 
 /**
+ * Format date as YYYY-MM-DD without timezone conversion
+ * @param {number} year - Year
+ * @param {number} month - Month (0-11, JavaScript Date format)
+ * @param {number} day - Day of month
+ * @returns {string} Formatted date string (YYYY-MM-DD)
+ */
+function formatLocalDate(year, month, day) {
+  const y = String(year);
+  const m = String(month + 1).padStart(2, '0');
+  const d = String(day).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/**
+ * Normalize a date to local midnight (00:00:00 local time)
+ * This ensures consistent date comparisons without timezone issues
+ * @param {Date|string} date - Date to normalize
+ * @returns {Date} Date normalized to local midnight
+ */
+export function normalizeToLocalMidnight(date) {
+  const d = new Date(date);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+/**
  * Get custom month range for a given date
  * @param {Date} date - The date to calculate the period for
  * @param {number} monthStartDay - Day of month when period starts (1-31)
@@ -76,13 +101,11 @@ export function getCustomMonthRange(date, monthStartDay) {
     }
   }
 
-  // Format dates as YYYY-MM-DD
-  const startDate = new Date(startYear, startMonth, startDay);
-  const endDate = new Date(endYear, endMonth, endDay);
-
+  // Format dates as YYYY-MM-DD without timezone conversion
+  // Using formatLocalDate instead of toISOString() to avoid timezone shifts
   return {
-    startDate: startDate.toISOString().split('T')[0],
-    endDate: endDate.toISOString().split('T')[0],
+    startDate: formatLocalDate(startYear, startMonth, startDay),
+    endDate: formatLocalDate(endYear, endMonth, endDay),
   };
 }
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api, { getSettings } from '../api';
 import AddSpending from './AddSpending';
-import { getCurrentCustomMonthRange, getCustomMonthRange } from '../utils/dateHelpers';
+import { getCurrentCustomMonthRange, getCustomMonthRange, normalizeToLocalMidnight } from '../utils/dateHelpers';
 
 function Dashboard({ user, onLogout }) {
   const handleLogoutClick = async () => {
@@ -137,13 +137,17 @@ function Dashboard({ user, onLogout }) {
     const now = new Date();
     const { startDate, endDate } = getCustomMonthRange(now, monthStartDay);
     
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const totalDaysInPeriod = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    // Normalize all dates to local midnight to avoid timezone issues
+    const start = normalizeToLocalMidnight(startDate);
+    const end = normalizeToLocalMidnight(endDate);
+    const nowNormalized = normalizeToLocalMidnight(now);
     
-    // Calculate days passed in current period
-    const daysPassed = Math.max(1, Math.ceil((now - start) / (1000 * 60 * 60 * 24)) + 1);
-    const daysPassedInPeriod = Math.min(daysPassed, totalDaysInPeriod);
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const totalDaysInPeriod = Math.floor((end - start) / msPerDay) + 1;
+    
+    // Calculate days passed in current period (inclusive count)
+    const daysPassed = Math.floor((nowNormalized - start) / msPerDay) + 1;
+    const daysPassedInPeriod = Math.min(Math.max(1, daysPassed), totalDaysInPeriod);
 
     const expectedDaily = monthlyBudget / totalDaysInPeriod;
     const actualDaily = totalSpent / daysPassedInPeriod;
