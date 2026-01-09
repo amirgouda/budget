@@ -271,3 +271,4 @@ JWT_SECRET=<your-secret-here>
 | `database "budget_app" does not exist` | Database missing | Create database first |
 | `Login failed` (500) | Generic error | Check backend logs for details |
 
+

@@ -4,6 +4,7 @@
  */
 
 const db = require('../db');
+const dateHelpers = require('../utils/dateHelpers');
 
 /**
  * Get spendings handler
@@ -226,10 +227,8 @@ async function getSpendingStatsHandler(req, res) {
       params.push(startDate, endDate);
       paramCount += 2;
     } else {
-      // Default to current month
-      const now = new Date();
-      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      // Default to current custom month period
+      const { startDate: firstDay, endDate: lastDay } = await dateHelpers.getCurrentCustomMonthRange();
       dateFilter = `WHERE s.date >= $${paramCount} AND s.date <= $${paramCount + 1}`;
       params.push(firstDay, lastDay);
       paramCount += 2;
@@ -265,9 +264,8 @@ async function getSpendingStatsHandler(req, res) {
       totalParams.push(startDate, endDate);
       totalParamCount += 2;
     } else {
-      const now = new Date();
-      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      // Default to current custom month period
+      const { startDate: firstDay, endDate: lastDay } = await dateHelpers.getCurrentCustomMonthRange();
       totalQuery += ` WHERE s.date >= $${totalParamCount} AND s.date <= $${totalParamCount + 1}`;
       totalParams.push(firstDay, lastDay);
       totalParamCount += 2;

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api';
+import api, { getSettings } from '../api';
 import AddSpending from './AddSpending';
+import { getCurrentCustomMonthRange, getCustomMonthRange } from '../utils/dateHelpers';
 
 function Dashboard({ user, onLogout }) {
   const handleLogoutClick = async () => {
@@ -16,6 +17,7 @@ function Dashboard({ user, onLogout }) {
   const [spendings, setSpendings] = useState([]);
   const [categories, setCategories] = useState([]);
   const [stats, setStats] = useState(null);
+  const [settings, setSettings] = useState({});
   const [loading, setLoading] = useState(true);
   const [showAddSpending, setShowAddSpending] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
@@ -23,15 +25,31 @@ function Dashboard({ user, onLogout }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadData();
+    loadSettings();
   }, []);
+
+  useEffect(() => {
+    if (settings.month_start_day) {
+      loadData();
+    }
+  }, [settings.month_start_day]);
+
+  const loadSettings = async () => {
+    try {
+      const settingsRes = await getSettings();
+      setSettings(settingsRes.data.settings || {});
+    } catch (err) {
+      console.error('Failed to load settings:', err);
+      // Default to calendar month if settings fail to load
+      setSettings({ month_start_day: '1' });
+    }
+  };
 
   const loadData = async () => {
     try {
-      // Get current month date range
-      const now = new Date();
-      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      // Get current custom month date range
+      const monthStartDay = parseInt(settings.month_start_day || '1', 10);
+      const { startDate: firstDay, endDate: lastDay } = getCurrentCustomMonthRange(monthStartDay);
       
       const [spendingsRes, categoriesRes, statsRes] = await Promise.all([
         api.get(`/spendings?startDate=${firstDay}&endDate=${lastDay}&limit=1000`),
@@ -81,11 +99,10 @@ function Dashboard({ user, onLogout }) {
     return `${parseFloat(amount).toFixed(2)} EGP`;
   };
 
-  // Calculate payment method totals for current month
+  // Calculate payment method totals for current custom month period
   const getPaymentMethodTotals = () => {
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+    const monthStartDay = parseInt(settings.month_start_day || '1', 10);
+    const { startDate: firstDay, endDate: lastDay } = getCurrentCustomMonthRange(monthStartDay);
 
     const monthlySpendings = spendings.filter((s) => {
       const spendingDate = s.date.split('T')[0];
@@ -116,22 +133,28 @@ function Dashboard({ user, onLogout }) {
       return null;
     }
 
+    const monthStartDay = parseInt(settings.month_start_day || '1', 10);
     const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    const totalDaysInMonth = lastDay.getDate();
-    const daysPassed = Math.max(1, now.getDate()); // At least 1 day has passed
+    const { startDate, endDate } = getCustomMonthRange(now, monthStartDay);
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const totalDaysInPeriod = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    
+    // Calculate days passed in current period
+    const daysPassed = Math.max(1, Math.ceil((now - start) / (1000 * 60 * 60 * 24)) + 1);
+    const daysPassedInPeriod = Math.min(daysPassed, totalDaysInPeriod);
 
-    const expectedDaily = monthlyBudget / totalDaysInMonth;
-    const actualDaily = totalSpent / daysPassed;
+    const expectedDaily = monthlyBudget / totalDaysInPeriod;
+    const actualDaily = totalSpent / daysPassedInPeriod;
     const ratio = expectedDaily > 0 ? (actualDaily / expectedDaily) * 100 : 0;
 
     return {
       expectedDaily,
       actualDaily,
       ratio,
-      daysPassed,
-      totalDaysInMonth,
+      daysPassed: daysPassedInPeriod,
+      totalDaysInMonth: totalDaysInPeriod,
     };
   };
 

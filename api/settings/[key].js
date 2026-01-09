@@ -1,8 +1,8 @@
 /**
- * Vercel serverless function for subcategories
+ * Vercel serverless function for updating a specific setting
  */
 
-const subcategoryHandlers = require('../../handlers/subcategories');
+const settingsHandlers = require('../../handlers/settings');
 const auth = require('../../auth');
 
 function authenticateRequest(req) {
@@ -38,7 +38,7 @@ function authenticateRequest(req) {
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'PUT, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
@@ -51,13 +51,15 @@ module.exports = async (req, res) => {
     return res.status(401).json({ error: error.message });
   }
 
-  if (req.method === 'GET') {
-    return subcategoryHandlers.getSubcategoriesHandler(req, res);
-  } else if (req.method === 'POST') {
-    return subcategoryHandlers.createSubcategoryHandler(req, res);
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+
+  req.params = { key: req.query.key };
+
+  if (req.method === 'PUT') {
+    return settingsHandlers.updateSettingHandler(req, res);
   } else {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 };
-
-

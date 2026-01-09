@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api';
+import api, { getSettings, updateSetting } from '../api';
+import { getCurrentCustomMonthRange, formatDateRange } from '../utils/dateHelpers';
 
 function AdminPanel({ user, onLogout }) {
   const handleLogoutClick = async () => {
@@ -16,6 +17,7 @@ function AdminPanel({ user, onLogout }) {
   const [categories, setCategories] = useState([]);
   const [members, setMembers] = useState([]);
   const [paymentMethods, setPaymentMethods] = useState([]);
+  const [settings, setSettings] = useState({});
   const [loading, setLoading] = useState(true);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [showMemberForm, setShowMemberForm] = useState(false);
@@ -31,15 +33,17 @@ function AdminPanel({ user, onLogout }) {
 
   const loadData = async () => {
     try {
-      const [categoriesRes, membersRes, paymentMethodsRes] = await Promise.all([
+      const [categoriesRes, membersRes, paymentMethodsRes, settingsRes] = await Promise.all([
         api.get('/categories'),
         api.get('/members'),
         api.get('/payment_methods'),
+        getSettings(),
       ]);
 
       setCategories(categoriesRes.data.categories || []);
       setMembers(membersRes.data.members || []);
       setPaymentMethods(paymentMethodsRes.data.paymentMethods || []);
+      setSettings(settingsRes.data.settings || {});
     } catch (err) {
       console.error('Failed to load data:', err);
     } finally {
@@ -163,6 +167,25 @@ function AdminPanel({ user, onLogout }) {
     }
   };
 
+  const handleSettingsSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const monthStartDay = parseInt(formData.get('monthStartDay'), 10);
+
+    if (isNaN(monthStartDay) || monthStartDay < 1 || monthStartDay > 31) {
+      alert('Month start day must be a number between 1 and 31');
+      return;
+    }
+
+    try {
+      await updateSetting('month_start_day', monthStartDay);
+      await loadData(); // Reload to get updated settings
+      alert('Settings updated successfully!');
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to update settings');
+    }
+  };
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -209,6 +232,12 @@ function AdminPanel({ user, onLogout }) {
             onClick={() => setActiveTab('payment_methods')}
           >
             Payment Methods
+          </button>
+          <button
+            className={`tab ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('settings')}
+          >
+            Settings
           </button>
         </div>
 
@@ -557,6 +586,56 @@ function AdminPanel({ user, onLogout }) {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {activeTab === 'settings' && (
+          <div className="admin-section">
+            <div className="section-header">
+              <h2>Application Settings</h2>
+            </div>
+
+            <form onSubmit={handleSettingsSubmit} className="admin-form">
+              <div className="form-group">
+                <label>Month Start Day</label>
+                <input
+                  type="number"
+                  name="monthStartDay"
+                  min="1"
+                  max="31"
+                  defaultValue={settings.month_start_day || '1'}
+                  required
+                />
+                <small style={{ display: 'block', marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
+                  The day of the month when each budget period starts (1-31). 
+                  For example, if set to 15, each period runs from the 15th to the 14th of the next month.
+                </small>
+              </div>
+
+              {settings.month_start_day && (
+                <div className="form-group" style={{ 
+                  padding: '1rem', 
+                  backgroundColor: 'var(--bg-secondary)', 
+                  borderRadius: '8px',
+                  marginTop: '1rem'
+                }}>
+                  <strong>Current Period Preview:</strong>
+                  <p style={{ marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
+                    {(() => {
+                      const monthStartDay = parseInt(settings.month_start_day || '1', 10);
+                      const range = getCurrentCustomMonthRange(monthStartDay);
+                      return formatDateRange(range.startDate, range.endDate);
+                    })()}
+                  </p>
+                </div>
+              )}
+
+              <div className="form-actions">
+                <button type="submit" className="btn btn-primary">
+                  Save Settings
+                </button>
+              </div>
+            </form>
           </div>
         )}
       </main>

@@ -21,3 +21,4 @@ module.exports = async (req, res) => {
   return authHandlers.logoutHandler(req, res);
 };
 
+

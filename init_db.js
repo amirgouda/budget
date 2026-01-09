@@ -146,6 +146,26 @@ async function initDatabase() {
     `);
     console.log('✓ Created sessions table');
 
+    // App settings table
+    await appClient.query(`
+      CREATE TABLE IF NOT EXISTS app_settings (
+        id SERIAL PRIMARY KEY,
+        key VARCHAR(100) UNIQUE NOT NULL,
+        value VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✓ Created app_settings table');
+
+    // Insert default month_start_day setting
+    await appClient.query(`
+      INSERT INTO app_settings (key, value)
+      VALUES ('month_start_day', '1')
+      ON CONFLICT (key) DO NOTHING
+    `);
+    console.log('✓ Inserted default month_start_day setting');
+
     // Create indexes for better performance
     console.log('\nCreating indexes...');
     

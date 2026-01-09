@@ -47,3 +47,4 @@ function CategorySelector({ categories, selectedCategory, onSelect, showBudget =
 
 export default CategorySelector;
 
+

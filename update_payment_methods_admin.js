@@ -80,3 +80,4 @@ async function updatePaymentMethodsForAdmin() {
 // Run migration
 updatePaymentMethodsForAdmin();
 
+

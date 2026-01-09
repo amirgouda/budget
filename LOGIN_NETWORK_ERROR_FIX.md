@@ -137,3 +137,4 @@ FRONTEND_URL=http://192.168.0.100:8080
    - From your computer: `ping 192.168.0.100`
    - From browser: `http://192.168.0.100:8081/health`
 
+

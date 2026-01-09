@@ -1,8 +1,8 @@
 /**
- * Vercel serverless function for subcategories
+ * Vercel serverless function for settings
  */
 
-const subcategoryHandlers = require('../../handlers/subcategories');
+const settingsHandlers = require('../../handlers/settings');
 const auth = require('../../auth');
 
 function authenticateRequest(req) {
@@ -38,7 +38,7 @@ function authenticateRequest(req) {
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
@@ -52,12 +52,8 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'GET') {
-    return subcategoryHandlers.getSubcategoriesHandler(req, res);
-  } else if (req.method === 'POST') {
-    return subcategoryHandlers.createSubcategoryHandler(req, res);
+    return settingsHandlers.getSettingsHandler(req, res);
   } else {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 };
-
-

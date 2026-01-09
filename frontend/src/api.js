@@ -43,5 +43,9 @@ api.interceptors.response.use(
   }
 );
 
+// Settings API methods
+export const getSettings = () => api.get('/settings');
+export const updateSetting = (key, value) => api.put(`/settings/${key}`, { value });
+
 export default api;
 

@@ -15,6 +15,7 @@ const categoryHandlers = require('./handlers/categories');
 const memberHandlers = require('./handlers/members');
 const subcategoryHandlers = require('./handlers/subcategories');
 const paymentMethodHandlers = require('./handlers/payment_methods');
+const settingsHandlers = require('./handlers/settings');
 
 const app = express();
 
@@ -69,6 +70,10 @@ app.post('/api/payment_methods', auth.getAuthMiddleware(), auth.requireAdmin, pa
 app.put('/api/payment_methods/:id', auth.getAuthMiddleware(), auth.requireAdmin, paymentMethodHandlers.updatePaymentMethodHandler);
 app.delete('/api/payment_methods/:id', auth.getAuthMiddleware(), auth.requireAdmin, paymentMethodHandlers.deletePaymentMethodHandler);
 app.put('/api/payment_methods/default', auth.getAuthMiddleware(), auth.requireAdmin, paymentMethodHandlers.setDefaultPaymentMethodHandler);
+
+// Settings routes
+app.get('/api/settings', auth.getAuthMiddleware(), settingsHandlers.getSettingsHandler);
+app.put('/api/settings/:key', auth.getAuthMiddleware(), auth.requireAdmin, settingsHandlers.updateSettingHandler);
 
 // Error handling middleware (must be before catch-all route)
 app.use((err, req, res, next) => {

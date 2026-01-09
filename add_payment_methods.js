@@ -99,3 +99,4 @@ async function addPaymentMethods() {
 // Run migration
 addPaymentMethods();
 
+
