@@ -22,7 +22,7 @@ async function getSpendingsHandler(req, res) {
         s.date,
         s.created_at,
         s.user_id,
-        u.username as user_name,
+        COALESCE(u.username, 'Deleted User') as user_name,
         s.category_id,
         c.name as category_name,
         c.monthly_budget,
@@ -32,7 +32,7 @@ async function getSpendingsHandler(req, res) {
         pm.name as payment_method_name,
         pm.icon as payment_method_icon
       FROM spendings s
-      JOIN users u ON s.user_id = u.id
+      LEFT JOIN users u ON s.user_id = u.id
       JOIN spending_categories c ON s.category_id = c.id
       LEFT JOIN subcategories sc ON s.subcategory_id = sc.id
       LEFT JOIN payment_methods pm ON s.payment_method_id = pm.id
@@ -154,7 +154,7 @@ async function addSpendingHandler(req, res) {
         s.date,
         s.created_at,
         s.user_id,
-        u.username as user_name,
+        COALESCE(u.username, 'Deleted User') as user_name,
         s.category_id,
         c.name as category_name,
         c.monthly_budget,
@@ -164,7 +164,7 @@ async function addSpendingHandler(req, res) {
         pm.name as payment_method_name,
         pm.icon as payment_method_icon
       FROM spendings s
-      JOIN users u ON s.user_id = u.id
+      LEFT JOIN users u ON s.user_id = u.id
       JOIN spending_categories c ON s.category_id = c.id
       LEFT JOIN subcategories sc ON s.subcategory_id = sc.id
       LEFT JOIN payment_methods pm ON s.payment_method_id = pm.id
@@ -196,8 +196,14 @@ async function deleteSpendingHandler(req, res) {
       return res.status(404).json({ error: 'Spending not found' });
     }
 
+    const spendingUserId = spendingResult.rows[0].user_id;
+    
     // Only allow deletion if user owns it or is admin
-    if (spendingResult.rows[0].user_id !== currentUser.id && currentUser.role !== 'admin') {
+    // If user_id is NULL (deleted user), only admins can delete
+    const isOwner = spendingUserId !== null && spendingUserId === currentUser.id;
+    const isAdmin = currentUser.role === 'admin';
+    
+    if (!isOwner && !isAdmin) {
       return res.status(403).json({ error: 'Not authorized to delete this spending' });
     }
 

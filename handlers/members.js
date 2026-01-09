@@ -176,12 +176,34 @@ async function deleteMemberHandler(req, res) {
       return res.status(400).json({ error: 'Cannot delete your own account' });
     }
 
+    // Check if user has created categories (which would prevent deletion)
+    const categoriesCheck = await db.query(
+      'SELECT COUNT(*) FROM spending_categories WHERE created_by = $1',
+      [id]
+    );
+    const categoryCount = parseInt(categoriesCheck.rows[0].count);
+    
+    if (categoryCount > 0) {
+      // Set created_by to NULL for categories created by this user before deletion
+      await db.query(
+        'UPDATE spending_categories SET created_by = NULL WHERE created_by = $1',
+        [id]
+      );
+    }
+
     await db.query('DELETE FROM users WHERE id = $1', [id]);
 
     res.json({ success: true });
   } catch (error) {
     console.error('Delete member error:', error);
-    res.status(500).json({ error: 'Failed to delete member' });
+    // Check for foreign key constraint errors
+    if (error.code === '23503' || error.message.includes('foreign key')) {
+      return res.status(400).json({ 
+        error: 'Cannot delete member: user has associated records that prevent deletion',
+        details: error.message 
+      });
+    }
+    res.status(500).json({ error: 'Failed to delete member', details: error.message });
   }
 }
 

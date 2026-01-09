@@ -112,7 +112,7 @@ async function initDatabase() {
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
         monthly_budget DECIMAL(10, 2) NOT NULL DEFAULT 0,
-        created_by INTEGER REFERENCES users(id),
+        created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(name)
       )
@@ -123,7 +123,7 @@ async function initDatabase() {
     await appClient.query(`
       CREATE TABLE IF NOT EXISTS spendings (
         id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
         category_id INTEGER NOT NULL REFERENCES spending_categories(id) ON DELETE RESTRICT,
         amount DECIMAL(10, 2) NOT NULL,
         description TEXT,
