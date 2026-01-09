@@ -279,14 +279,30 @@ function Dashboard({ user, onLogout }) {
                 );
               })}
             </div>
-            <div 
-              className={`total-spending ${showPaymentBreakdown ? 'collapsed' : ''}`}
-              onClick={() => setShowPaymentBreakdown(!showPaymentBreakdown)}
-              style={{ cursor: 'pointer' }}
-            >
-              <strong>Total Spent This Month: {formatCurrency(stats.total || 0)}</strong>
-              <span className="total-spending-toggle">▼</span>
-            </div>
+            {(() => {
+              // Calculate overall spending health status
+              const totalBudget = stats.categories.reduce((sum, cat) => sum + parseFloat(cat.monthly_budget || 0), 0);
+              const totalSpent = parseFloat(stats.total || 0);
+              const overallHealth = totalBudget > 0 ? calculateDailySpendingHealth(totalBudget, totalSpent) : null;
+              const overallHealthStatus = overallHealth ? getHealthStatus(overallHealth.ratio) : null;
+              
+              return (
+                <div 
+                  className={`total-spending ${showPaymentBreakdown ? 'collapsed' : ''}`}
+                  onClick={() => setShowPaymentBreakdown(!showPaymentBreakdown)}
+                  style={{ 
+                    cursor: 'pointer',
+                    color: overallHealthStatus ? overallHealthStatus.color : 'inherit'
+                  }}
+                >
+                  {overallHealthStatus && (
+                    <span style={{ marginRight: '0.5rem' }}>{overallHealthStatus.icon}</span>
+                  )}
+                  <strong>Total Spent This Month: {formatCurrency(totalSpent)}</strong>
+                  <span className="total-spending-toggle">▼</span>
+                </div>
+              );
+            })()}
 
             {showPaymentBreakdown && (
               <div className="payment-method-breakdown">
