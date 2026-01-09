@@ -306,6 +306,74 @@ function Dashboard({ user, onLogout }) {
                     </div>
                   )}
                 </div>
+                {(() => {
+                  // Calculate overall budget and spending health
+                  const totalBudget = stats.categories.reduce((sum, cat) => sum + parseFloat(cat.monthly_budget || 0), 0);
+                  const totalSpent = parseFloat(stats.total || 0);
+                  
+                  if (totalBudget > 0) {
+                    const overallHealth = calculateDailySpendingHealth(totalBudget, totalSpent);
+                    if (overallHealth) {
+                      const expectedSpending = overallHealth.expectedDaily * overallHealth.daysPassed;
+                      const difference = totalSpent - expectedSpending;
+                      
+                      return (
+                        <div style={{ 
+                          marginTop: '1.5rem', 
+                          padding: '1rem', 
+                          backgroundColor: 'var(--bg-secondary)', 
+                          borderRadius: '8px',
+                          borderTop: '2px solid var(--border-color)'
+                        }}>
+                          <div style={{ 
+                            fontSize: '0.9rem', 
+                            color: 'var(--text-secondary)', 
+                            marginBottom: '0.5rem',
+                            fontWeight: 'bold'
+                          }}>
+                            Overall Spending Status
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                            <div>
+                              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                                Total Budget: {formatCurrency(totalBudget)}
+                              </div>
+                              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                                Expected for {overallHealth.daysPassed} days: {formatCurrency(expectedSpending)}
+                              </div>
+                            </div>
+                            {difference > 0 ? (
+                              <div style={{ 
+                                color: 'var(--danger-color)', 
+                                fontSize: '1rem',
+                                fontWeight: 'bold'
+                              }}>
+                                Over budget by: {formatCurrency(difference)}
+                              </div>
+                            ) : difference < 0 ? (
+                              <div style={{ 
+                                color: 'var(--success-color)', 
+                                fontSize: '1rem',
+                                fontWeight: 'bold'
+                              }}>
+                                Buffered: {formatCurrency(Math.abs(difference))}
+                              </div>
+                            ) : (
+                              <div style={{ 
+                                color: 'var(--primary-color)', 
+                                fontSize: '1rem',
+                                fontWeight: 'bold'
+                              }}>
+                                On track
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+                  }
+                  return null;
+                })()}
               </div>
             )}
           </section>
